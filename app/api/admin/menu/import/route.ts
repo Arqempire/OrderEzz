@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { verifyAdminSession } from '@/lib/auth/admin-guard';
 
 export const runtime = 'nodejs';
 
@@ -12,6 +13,14 @@ interface ExtractedMenuItem {
 }
 
 export async function POST(request: Request) {
+  // 1. Server-side auth & role verification
+  const auth = await verifyAdminSession(request);
+  if (!auth.authorized) {
+    return NextResponse.json(
+      { success: false, error: auth.error },
+      { status: auth.status || 401 }
+    );
+  }
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;

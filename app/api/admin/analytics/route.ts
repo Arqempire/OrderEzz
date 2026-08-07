@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { fetchAnalyticsData, getDateRangeBounds } from '@/lib/queries/analytics';
+import { verifyAdminSession } from '@/lib/auth/admin-guard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  // 1. Server-side auth & role verification
+  const auth = await verifyAdminSession(request);
+  if (!auth.authorized) {
+    return NextResponse.json(
+      { success: false, error: auth.error },
+      { status: auth.status || 401 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const rangePreset = (searchParams.get('range') || 'today') as 'today' | 'week' | 'month' | 'custom';
@@ -23,7 +33,7 @@ export async function GET(request: Request) {
   } catch (error: any) {
     console.error('Error fetching analytics endpoint:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      { success: false, error: error.message || 'Internal Server Error' },
       { status: 500 }
     );
   }

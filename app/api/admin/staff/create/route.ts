@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { verifyAdminSession } from '@/lib/auth/admin-guard';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
+  // 1. Server-side auth & role verification
+  const auth = await verifyAdminSession(request);
+  if (!auth.authorized) {
+    return NextResponse.json(
+      { success: false, error: auth.error },
+      { status: auth.status || 401 }
+    );
+  }
   try {
     const body = await request.json();
     const { email, password, fullName, role } = body;
