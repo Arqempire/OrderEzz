@@ -21,11 +21,10 @@ export function AdminLogoutButton({ className = '', variant = 'default' }: Admin
       const supabase = createClient();
       await supabase.auth.signOut();
       toast.success('Signed out of Admin Panel');
-      router.push('/admin/login');
+      window.location.href = '/admin/login';
     } catch (error: any) {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
-    } finally {
       setIsSigningOut(false);
     }
   };

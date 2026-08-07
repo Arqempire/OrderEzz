@@ -20,13 +20,19 @@ function AdminLoginForm() {
 
   // Auto-redirect if already logged in as Admin
   useEffect(() => {
-    const checkActiveSession = async () => {
+    async function checkActiveSession() {
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const profile = await fetchStaffProfile(user.id);
-          if (profile?.role === 'admin') {
+          const { data: rpcIsAdmin } = await supabase.rpc('is_admin');
+          let isAdmin = rpcIsAdmin === true;
+          if (!isAdmin) {
+            const profile = await fetchStaffProfile(user.id);
+            if (profile?.role === 'admin') isAdmin = true;
+          }
+
+          if (isAdmin) {
             toast.success('Active admin session restored');
             router.replace(redirectTo);
             return;
@@ -60,9 +66,15 @@ function AdminLoginForm() {
       }
 
       const userId = authData.user.id;
-      const profile = await fetchStaffProfile(userId);
+      const { data: rpcIsAdmin } = await supabase.rpc('is_admin');
+      let isAdmin = rpcIsAdmin === true;
 
-      if (!profile || profile.role !== 'admin') {
+      if (!isAdmin) {
+        const profile = await fetchStaffProfile(userId);
+        if (profile?.role === 'admin') isAdmin = true;
+      }
+
+      if (!isAdmin) {
         // Reject non-admin user
         await supabase.auth.signOut();
         toast.error('Access denied. Admin role privileges required.');

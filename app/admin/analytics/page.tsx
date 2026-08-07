@@ -76,8 +76,15 @@ export default function AdminAnalyticsPage() {
         url += `&start=${encodeURIComponent(customStart)}&end=${encodeURIComponent(customEnd)}`;
       }
 
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const [res, liveOrders] = await Promise.all([
-        fetch(url),
+        fetch(url, { headers }),
         fetchAllActiveOrders(),
       ]);
 

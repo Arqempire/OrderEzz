@@ -16,7 +16,22 @@ export interface AdminAuthResult {
 export async function verifyAdminSession(request: Request): Promise<AdminAuthResult> {
   try {
     const supabase = createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    let { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    // If cookie user is null, fallback to checking Authorization Bearer token header
+    if (!user) {
+      const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7).trim();
+        if (token) {
+          const { data: tokenUserData, error: tokenError } = await supabase.auth.getUser(token);
+          if (tokenUserData?.user && !tokenError) {
+            user = tokenUserData.user;
+            authError = null;
+          }
+        }
+      }
+    }
 
     if (authError || !user) {
       return {

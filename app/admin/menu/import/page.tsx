@@ -53,11 +53,19 @@ export default function AdminMenuImportPage() {
     setIsAnalyzing(true);
 
     try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const formData = new FormData();
       formData.append('file', selectedFile);
 
       const response = await fetch('/api/admin/menu/import', {
         method: 'POST',
+        headers,
         body: formData,
       });
 

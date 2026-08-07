@@ -45,22 +45,43 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // Helper to construct redirects while preserving modified cookies
+  const createRedirect = (targetUrl: string | URL) => {
+    const redirectRes = NextResponse.redirect(
+      typeof targetUrl === 'string' ? new URL(targetUrl, request.url) : targetUrl
+    );
+    response.cookies.getAll().forEach((c) => {
+      redirectRes.cookies.set(c.name, c.value, c);
+    });
+    return redirectRes;
+  };
+
   // 3. Authenticate Supabase user
   const { data: { user } } = await supabase.auth.getUser();
 
   let isAdmin = false;
   let isStaff = false;
   if (user) {
-    // Query staff_users table to check role
-    const { data: staffUser } = await supabase
-      .from('staff_users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (staffUser) {
+  let isAdmin = false;
+  let isStaff = false;
+  if (user) {
+    // Check role via Security Definer RPC function first (bypasses RLS locks)
+    const { data: rpcIsAdmin } = await supabase.rpc('is_admin');
+    if (rpcIsAdmin === true) {
+      isAdmin = true;
       isStaff = true;
-      isAdmin = staffUser.role === 'admin';
+    } else {
+      // Fallback direct table query
+      const { data: staffUser } = await supabase
+        .from('staff_users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (staffUser) {
+        isStaff = true;
+        isAdmin = staffUser.role === 'admin';
+      }
     }
   }
 
@@ -68,14 +89,14 @@ export async function middleware(request: NextRequest) {
   if (isAdminLoginPage) {
     if (isAdmin) {
       const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/admin/analytics';
-      return NextResponse.redirect(new URL(redirectTo, request.url));
+      return createRedirect(redirectTo);
     }
     return response;
   }
   if (isStaffLoginPage) {
     if (isStaff) {
       const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/staff/orders';
-      return NextResponse.redirect(new URL(redirectTo, request.url));
+      return createRedirect(redirectTo);
     }
     return response;
   }
@@ -101,7 +122,7 @@ export async function middleware(request: NextRequest) {
     const returnUrl = encodeURIComponent(pathname + search);
     const loginPath = requiresAdmin ? '/admin/login' : '/staff/login';
     const loginUrl = new URL(`${loginPath}?redirectTo=${returnUrl}`, request.url);
-    return NextResponse.redirect(loginUrl);
+    return createRedirect(loginUrl);
   }
 
   return response;
