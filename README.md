@@ -1,0 +1,65 @@
+# OrderEzz - Dine-In Restaurant Ordering Web App
+
+**OrderEzz** is a modern, mobile-first, real-time dine-in restaurant ordering application. Customers scan a QR code at their table, browse the menu, add items to cart, place orders securely, and track kitchen status live.
+
+Built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, and **Supabase (Postgres, Auth, Realtime, RLS)**.
+
+---
+
+## Key Features & Security Architecture
+
+1. **Unguessable QR Tokens & Table Privacy**:
+   - Customers scan QR codes pointing to `/order?t=<qr_token>` where `qr_token` is a UUID.
+   - Internal `table_number` is never exposed in URLs or client payloads.
+   - Table resolution is handled via a PostgreSQL `SECURITY DEFINER` function `resolve_table_from_qr_token(token)`.
+2. **Server-Side Price Validation**:
+   - Orders are placed through the Postgres function `place_order_with_items(p_table_id, p_items)`.
+   - Prices and total amounts are recalculated server-side directly from `menu_items.price` before saving to prevent payload tampering.
+3. **Staff & Admin Menu Stock Control (`/staff/menu` & `/admin/menu`)**:
+   - Both **Admins** (`/admin/menu`) and **Kitchen Staff** (`/staff/menu`) can toggle dish availability (`In Stock` / `Sold Out`).
+   - Powered by a PostgreSQL `SECURITY DEFINER` RPC function `toggle_menu_item_availability(p_item_id, p_is_available)` bypassing browser RLS restrictions.
+   - When marked `Sold Out`, the customer ordering interface (`/order`) immediately exposes a "Sold Out" overlay and disables cart additions for that dish in real time.
+4. **Customer Reviews & Feedback System (`/admin/feedback` & `/staff/feedback`)**:
+   - Available in **both** the Admin Panel (`/admin/feedback`) and Staff Panel (`/staff/feedback`).
+   - Admins, kitchen staff, and hotel management can inspect diner star ratings (1 to 5 stars), experience tags (`Delicious Food`, `Quick Service`, `Friendly Staff`), and custom chef notes submitted during table checkout.
+5. **Executive Analytics Dashboard (`/admin/analytics`)**:
+   - Live revenue, order count, AOV (₹), and average kitchen fulfillment time.
+   - Interactive Total Revenue & Total Orders metric breakdown cards.
+   - Card-contained Live Order Status Snapshot inspector with real-time active dish popup.
+6. **Order Status Transition History Logging (`order_status_history`)**:
+   - Automatic database trigger `trigger_log_order_status_change` logs every order status change (`received` -> `preparing` -> `ready` -> `served` -> `paid`) with exact `changed_at` timestamps for precise throughput analytics.
+7. **Real-time Kitchen & Customer Updates**:
+   - Staff Kanban Dashboard (`/staff/orders`) and Customer Status Page (`/order/status/[orderId]`) subscribe to Supabase Realtime updates on the `orders` table.
+
+---
+
+## Database Migrations Setup
+
+In your Supabase Dashboard SQL Editor, run the migration scripts in numerical order:
+1. `supabase/migrations/001_initial_schema.sql`
+2. `supabase/migrations/002_rls_policies.sql`
+3. `supabase/migrations/003_rpc_functions.sql`
+4. `supabase/migrations/004_seed_data.sql`
+5. `supabase/migrations/005_ai_menu_import.sql`
+6. `supabase/migrations/006_staff_profiles_update.sql`
+7. `supabase/migrations/007_auto_create_staff_profile.sql`
+8. `supabase/migrations/008_analytics_and_history.sql`
+9. `supabase/migrations/009_enable_realtime_orders.sql`
+10. `supabase/migrations/010_customer_feedbacks.sql`
+11. `supabase/migrations/011_allow_staff_update_own_profile.sql`
+12. `supabase/migrations/012_analytics_rpc_functions.sql`
+13. `supabase/migrations/013_enable_realtime_menu_items.sql`
+14. `supabase/migrations/014_toggle_menu_availability_rpc.sql`
+
+Enable **Realtime** in Supabase for tables `orders` and `menu_items`:
+- Go to **Database** -> **Publications** -> **supabase_realtime** -> Enable `orders` and `menu_items`.
+
+---
+
+## Local Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
