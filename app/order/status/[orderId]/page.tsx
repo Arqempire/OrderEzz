@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { fetchOrderDetailsById } from '@/lib/queries/orders';
 import { Order } from '@/lib/types/database.types';
 import { OrderStatusTracker } from '@/components/order/order-status-tracker';
-import { Loader2, AlertCircle, UtensilsCrossed, ArrowLeft, Home, PlusCircle } from 'lucide-react';
+import { Loader2, AlertCircle, UtensilsCrossed, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 
-export default function OrderStatusPage() {
+function OrderStatusContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const orderId = params.orderId as string;
+  const tokenFromUrl = searchParams.get('t');
 
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,17 +51,11 @@ export default function OrderStatusPage() {
         </div>
         <h2 className="text-xl font-bold font-display">Order Not Found</h2>
         <p className="text-xs text-slate-400 mt-2">{error}</p>
-        <Link
-          href="/"
-          className="mt-6 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700 inline-flex items-center gap-2"
-        >
-          <ArrowLeft size={14} /> Return Home
-        </Link>
       </div>
     );
   }
 
-  const tableQrToken = order.table?.qr_token;
+  const tableQrToken = tokenFromUrl || order.table?.qr_token;
 
   return (
     <main className="menu-container px-4 py-6">
@@ -89,17 +85,26 @@ export default function OrderStatusPage() {
               <PlusCircle size={14} /> Explore Menu
             </Link>
           )}
-          <Link
-            href="/"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-800 transition-colors flex items-center gap-1"
-          >
-            <Home size={14} /> Home
-          </Link>
         </div>
       </header>
 
       {/* Realtime Order Tracker Component */}
       <OrderStatusTracker initialOrder={order} />
     </main>
+  );
+}
+
+export default function OrderStatusPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center text-slate-100">
+          <Loader2 size={36} className="text-amber-400 animate-spin mb-4" />
+          <h2 className="text-lg font-bold font-display">Loading Live Order Status...</h2>
+        </div>
+      }
+    >
+      <OrderStatusContent />
+    </Suspense>
   );
 }

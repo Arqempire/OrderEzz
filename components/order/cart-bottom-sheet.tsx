@@ -8,17 +8,20 @@ import { Button } from '@/components/ui/button';
 import { placeCustomerOrder } from '@/lib/queries/orders';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { saveOrderToLocalStorage } from '@/lib/utils/order-session';
 
 interface CartBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   tableId: string;
+  tableToken?: string;
 }
 
 export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   isOpen,
   onClose,
   tableId,
+  tableToken,
 }) => {
   const router = useRouter();
   const { items, updateQuantity, updateNotes, removeItem, clearCart, getTotalPrice } = useCartStore();
@@ -55,11 +58,16 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
         return;
       }
 
-      // Store order ID in customer local storage
+      // Store order ID in customer local storage (table-scoped and legacy fallback)
+      if (tableToken) {
+        saveOrderToLocalStorage(tableToken, orderId);
+      }
       try {
         const storedOrders = JSON.parse(localStorage.getItem('orderezz_customer_orders') || '[]');
-        storedOrders.unshift(orderId);
-        localStorage.setItem('orderezz_customer_orders', JSON.stringify(storedOrders));
+        if (!storedOrders.includes(orderId)) {
+          storedOrders.unshift(orderId);
+          localStorage.setItem('orderezz_customer_orders', JSON.stringify(storedOrders));
+        }
       } catch (err) {
         console.error('LocalStorage write error:', err);
       }
@@ -67,7 +75,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
       clearCart();
       onClose();
       toast.success('Order placed successfully!');
-      router.push(`/order/status/${orderId}`);
+      router.push(tableToken ? `/order/status/${orderId}?t=${tableToken}` : `/order/status/${orderId}`);
     } catch (error) {
       console.error('Error placing order:', error);
       toast.error('An error occurred while submitting your order.');

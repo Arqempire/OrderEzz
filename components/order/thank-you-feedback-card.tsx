@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Order } from '@/lib/types/database.types';
-import { Star, Heart, MessageSquare, CheckCircle2, Utensils, Home, PlusCircle, Sparkles } from 'lucide-react';
+import { Star, Heart, MessageSquare, CheckCircle2, Utensils, PlusCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -74,22 +74,16 @@ export const ThankYouFeedbackCard: React.FC<ThankYouFeedbackCardProps> = ({ orde
         </p>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-6">
-          {tableQrToken && (
+        {tableQrToken && (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-6">
             <Link
               href={`/order?t=${tableQrToken}`}
               className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-5 py-3 rounded-2xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2"
             >
               <PlusCircle size={16} /> Order Again for Table {order.table?.table_number}
             </Link>
-          )}
-          <Link
-            href="/"
-            className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-5 py-3 rounded-2xl border border-slate-800 transition-colors flex items-center justify-center gap-2"
-          >
-            <Home size={16} /> Return Home
-          </Link>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Feedback Section */}

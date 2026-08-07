@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Order, OrderStatus } from '@/lib/types/database.types';
 import { createClient } from '@/lib/supabase/client';
 import { OrderStatusBadge } from '@/components/ui/badge';
-import { CheckCircle2, Clock, Utensils, Sparkles, CheckCheck, RefreshCw, PlusCircle, Home, Radio } from 'lucide-react';
+import { CheckCircle2, Clock, Utensils, Sparkles, CheckCheck, RefreshCw, PlusCircle, Radio } from 'lucide-react';
 import { fetchOrderDetailsById } from '@/lib/queries/orders';
 import { ThankYouFeedbackCard } from '@/components/order/thank-you-feedback-card';
 import Link from 'next/link';
@@ -145,12 +145,6 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
               <PlusCircle size={15} /> Order More Items
             </Link>
           )}
-          <Link
-            href="/"
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700 transition-colors flex items-center gap-1.5"
-          >
-            <Home size={15} /> Home Page
-          </Link>
         </div>
       </div>
 

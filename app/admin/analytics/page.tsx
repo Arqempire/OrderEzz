@@ -6,6 +6,7 @@ import { Order, OrderStatus } from '@/lib/types/database.types';
 import { fetchAllActiveOrders } from '@/lib/queries/orders';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 import {
   BarChart3,
   TrendingUp,

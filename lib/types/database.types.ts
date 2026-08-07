@@ -2,6 +2,8 @@ export type OrderStatus = 'received' | 'preparing' | 'ready' | 'served' | 'paid'
 export type StaffRole = 'kitchen' | 'admin';
 export type ImportBatchStatus = 'pending_review' | 'confirmed' | 'discarded';
 
+export * from './table-request.types';
+
 export interface TableRow {
   id: string;
   table_number: number;

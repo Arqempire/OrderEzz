@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Order } from '@/lib/types/database.types';
 import { fetchAllActiveOrders } from '@/lib/queries/orders';
 import { KanbanColumn } from '@/components/staff/kanban-column';
+import { TableRequestsPanel } from '@/components/staff/table-requests-panel';
 import { createClient } from '@/lib/supabase/client';
 import { UtensilsCrossed, RefreshCw, LogOut, Settings, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
@@ -116,6 +117,9 @@ export default function StaffOrdersDashboard() {
           </Link>
         </div>
       </header>
+
+      {/* Live Table Requests Panel ('Call Waiter' & 'Request Water') */}
+      <TableRequestsPanel />
 
       {/* Kanban Board Columns */}
       <div className="kanban-board">

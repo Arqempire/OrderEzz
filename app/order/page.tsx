@@ -9,6 +9,8 @@ import { MenuCard } from '@/components/order/menu-card';
 import { CategoryNav } from '@/components/order/category-nav';
 import { StickyCartBar } from '@/components/order/sticky-cart-bar';
 import { CartBottomSheet } from '@/components/order/cart-bottom-sheet';
+import { ActiveOrderBanner } from '@/components/order/active-order-banner';
+import { TableRequestButtons } from '@/components/order/table-request-buttons';
 import { useCartStore } from '@/lib/store/cart-store';
 import { createClient } from '@/lib/supabase/client';
 import { Search, UtensilsCrossed, AlertTriangle, Loader2 } from 'lucide-react';
@@ -180,6 +182,14 @@ function CustomerOrderContent() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
+        {/* Table Quick Actions Bar ('Call Waiter' & 'Request Water') */}
+        {tableId && (
+          <div className="flex items-center justify-between bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl px-3.5 py-2">
+            <span className="text-xs font-bold text-slate-300 font-display">Need Assistance?</span>
+            <TableRequestButtons tableId={tableId} />
+          </div>
+        )}
+
         {/* Category Navigation Bar (when not searching) */}
         {!searchQuery && categories.length > 0 && (
           <CategoryNav
@@ -203,11 +213,19 @@ function CustomerOrderContent() {
         </section>
       </main>
 
+      {/* Persistent Table-Scoped Active Order Tracking Banner */}
+      {token && <ActiveOrderBanner tableToken={token} hasCartItems={useCartStore.getState().getTotalItems() > 0} />}
+
       {/* Sticky Bottom Cart Bar */}
       <StickyCartBar onOpenCart={() => setIsCartOpen(true)} />
 
       {/* Cart Bottom Sheet Modal */}
-      <CartBottomSheet isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} tableId={tableId} />
+      <CartBottomSheet
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        tableId={tableId}
+        tableToken={token || undefined}
+      />
     </div>
   );
 }
