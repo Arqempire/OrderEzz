@@ -10,7 +10,7 @@ interface OrderStatusBadgeProps {
 const statusConfig: Record<OrderStatus, { label: string; styleClass: string }> = {
   received: { label: 'Received', styleClass: 'status-badge-received' },
   preparing: { label: 'Preparing', styleClass: 'status-badge-preparing' },
-  ready: { label: 'Ready for Pickup', styleClass: 'status-badge-ready' },
+  ready: { label: 'Ready', styleClass: 'status-badge-ready' },
   served: { label: 'Served', styleClass: 'status-badge-served' },
   paid: { label: 'Paid', styleClass: 'status-badge-paid' },
   cancelled: { label: 'Cancelled', styleClass: 'status-badge-cancelled' },

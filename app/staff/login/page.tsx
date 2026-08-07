@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { fetchStaffProfile } from '@/lib/queries/staff';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, Lock, Mail } from 'lucide-react';
+import { UtensilsCrossed, Lock, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 export default function StaffLoginPage() {
   const router = useRouter();
@@ -100,6 +101,21 @@ export default function StaffLoginPage() {
             Sign In to Dashboard
           </Button>
         </form>
+
+        <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs">
+          <Link
+            href="/admin/login"
+            className="text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1 font-semibold"
+          >
+            <ShieldCheck size={14} /> Admin Portal Login
+          </Link>
+          <Link
+            href="/"
+            className="text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1"
+          >
+            <ArrowLeft size={13} /> Back to Home
+          </Link>
+        </div>
       </div>
     </main>
   );

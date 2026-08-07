@@ -21,14 +21,14 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   return (
     <div className="kanban-column">
       {/* Column Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <h3 className="font-bold text-sm text-slate-200 font-display">{title}</h3>
-          <span className="bg-slate-800 text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-800 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <h3 className="font-bold text-sm text-slate-200 font-display truncate">{title}</h3>
+          <span className="bg-slate-800 text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">
             {orders.length}
           </span>
         </div>
-        <OrderStatusBadge status={status} />
+        <OrderStatusBadge status={status} className="flex-shrink-0" />
       </div>
 
       {/* Cards List */}

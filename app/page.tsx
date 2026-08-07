@@ -1,13 +1,12 @@
 import Link from 'next/link';
 import { QrCode, LayoutDashboard, Settings, UtensilsCrossed, ArrowRight, BarChart3, MessageSquare, ChefHat } from 'lucide-react';
+import { fetchAllTables } from '@/lib/queries/tables';
 
-export default function Home() {
-  // Pre-configured test tokens corresponding to 004_seed_data.sql
-  const demoTokens = [
-    { table: 1, token: '11111111-1111-1111-1111-111111111111' },
-    { table: 2, token: '22222222-2222-2222-2222-222222222222' },
-    { table: 3, token: '33333333-3333-3333-3333-333333333333' },
-  ];
+export const revalidate = 0;
+
+export default async function Home() {
+  const tables = await fetchAllTables();
+  const activeTables = tables.filter((t) => t.is_active).slice(0, 3);
 
   return (
     <main className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-100 relative overflow-hidden">
@@ -45,16 +44,19 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-3 gap-2 pt-1">
-              {demoTokens.map(({ table, token }) => (
+              {activeTables.map((t) => (
                 <Link
-                  key={table}
-                  href={`/order?t=${token}`}
+                  key={t.id}
+                  href={`/order?t=${t.qr_token}`}
                   className="bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-slate-200 text-xs font-semibold py-2 px-3 rounded-xl border border-slate-800 hover:border-amber-400 transition-all flex items-center justify-between group"
                 >
-                  <span>Table {table}</span>
+                  <span>Table {t.table_number}</span>
                   <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
               ))}
+              {activeTables.length === 0 && (
+                <p className="col-span-3 text-xs text-slate-500 py-1">No active tables found</p>
+              )}
             </div>
           </div>
 

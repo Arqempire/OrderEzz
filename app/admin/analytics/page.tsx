@@ -32,8 +32,8 @@ import {
   Table as TableIcon,
   Layers,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import Link from 'next/link';
+import { AdminLogoutButton } from '@/components/admin/admin-logout-button';
 import {
   BarChart,
   Bar,
@@ -227,6 +227,7 @@ export default function AdminAnalyticsPage() {
           >
             <ArrowLeft size={14} /> Staff Dashboard
           </Link>
+          <AdminLogoutButton />
         </div>
       </header>
 

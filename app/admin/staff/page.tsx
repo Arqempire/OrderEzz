@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserPlus, Users, Mail, Lock, User, Shield, RefreshCw, ArrowLeft, KeyRound, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { AdminLogoutButton } from '@/components/admin/admin-logout-button';
 
 export default function AdminStaffPage() {
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
@@ -121,6 +122,7 @@ export default function AdminStaffPage() {
           >
             <ArrowLeft size={14} /> Staff Dashboard
           </Link>
+          <AdminLogoutButton />
         </div>
       </header>
 

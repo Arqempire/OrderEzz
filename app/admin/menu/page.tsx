@@ -15,6 +15,7 @@ import { Plus, Edit, Trash2, Power, Utensils, FolderPlus, ArrowLeft, Sparkles, U
 import { toast } from 'sonner';
 import Image from 'next/image';
 import Link from 'next/link';
+import { AdminLogoutButton } from '@/components/admin/admin-logout-button';
 
 export default function AdminMenuPage() {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -147,6 +148,7 @@ export default function AdminMenuPage() {
           >
             <ArrowLeft size={14} /> Tables Management
           </Link>
+          <AdminLogoutButton />
         </div>
       </header>
 

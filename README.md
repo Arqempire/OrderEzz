@@ -57,6 +57,7 @@ In your Supabase Dashboard SQL Editor, run the migration scripts in numerical or
 15. `supabase/migrations/015_menu_items_update_policy.sql`
 16. `supabase/migrations/016_fix_staff_menu_update_rls.sql`
 17. `supabase/migrations/017_admin_auth_rls_security.sql`
+18. `supabase/migrations/018_random_qr_tokens.sql`
 
 Enable **Realtime** in Supabase for tables `orders` and `menu_items`:
 - Go to **Database** -> **Publications** -> **supabase_realtime** -> Enable `orders` and `menu_items`.

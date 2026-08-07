@@ -19,6 +19,7 @@ import {
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
+import { AdminLogoutButton } from '@/components/admin/admin-logout-button';
 
 export default function AdminFeedbackPage() {
   const [feedbacks, setFeedbacks] = useState<CustomerFeedback[]>([]);
@@ -101,6 +102,7 @@ export default function AdminFeedbackPage() {
           >
             <ArrowLeft size={14} /> Staff Dashboard
           </Link>
+          <AdminLogoutButton />
         </div>
       </header>
 

@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
+import { AdminLogoutButton } from '@/components/admin/admin-logout-button';
 
 interface CartItem {
   menuItemId: string;
@@ -173,12 +174,15 @@ export default function AdminPlaceOrderPage() {
             <p className="text-xs text-slate-400 mt-0.5">Select a table, build the cart, and place the order directly</p>
           </div>
         </div>
-        <Link
-          href="/admin/analytics"
-          className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 flex items-center gap-1.5 transition-colors self-start"
-        >
-          <ArrowLeft size={14} /> Back to Dashboard
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/analytics"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 flex items-center gap-1.5 transition-colors"
+          >
+            <ArrowLeft size={14} /> Back to Dashboard
+          </Link>
+          <AdminLogoutButton />
+        </div>
       </header>
 
       {/* Table Selector */}

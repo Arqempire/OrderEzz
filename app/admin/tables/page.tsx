@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, RefreshCw, QrCode, ArrowLeft, Printer, Users, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { AdminLogoutButton } from '@/components/admin/admin-logout-button';
 
 export default function AdminTablesPage() {
   const [tables, setTables] = useState<TableRow[]>([]);
@@ -98,6 +99,7 @@ export default function AdminTablesPage() {
           >
             Manage Menu Items
           </Link>
+          <AdminLogoutButton />
           <Link
             href="/staff/orders"
             className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5"
