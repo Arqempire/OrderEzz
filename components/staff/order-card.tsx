@@ -160,15 +160,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
                 <Clock size={11} />
                 {timeAgo(order.created_at)}
               </div>
-              {order.status !== 'paid' && order.status !== 'served' && (
-                <button
-                  onClick={handleCancelOrder}
-                  className="text-slate-500 hover:text-red-400 p-0.5 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer flex-shrink-0"
-                  title="Cancel Order"
-                >
-                  <XCircle size={14} />
-                </button>
-              )}
+              <button
+                onClick={handleCancelOrder}
+                className="text-slate-500 hover:text-red-400 p-0.5 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer flex-shrink-0"
+                title="Cancel Order"
+              >
+                <XCircle size={14} />
+              </button>
             </>
           )}
         </div>

@@ -198,7 +198,7 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
           </div>
         )}
 
-        {order.status !== 'received' && order.status !== 'cancelled' && order.status !== 'paid' && (
+        {order.status !== 'received' && order.status !== 'cancelled' && (
           <div className="mt-4 pt-3 border-t border-slate-800 text-center">
             <span className="text-[11px] text-slate-500 italic">
               Kitchen has started preparing your dish — cancellation is no longer available.
