@@ -4,16 +4,19 @@ import { NextResponse, type NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  // 1. Only process /admin routes and /api/admin routes
+  // 1. Process /admin and /staff pages, and their /api counterparts
   const isAdminPage = pathname.startsWith('/admin');
   const isAdminApi = pathname.startsWith('/api/admin');
+  const isStaffPage = pathname.startsWith('/staff');
+  const isStaffApi = pathname.startsWith('/api/staff');
 
-  if (!isAdminPage && !isAdminApi) {
+  if (!isAdminPage && !isAdminApi && !isStaffPage && !isStaffApi) {
     return NextResponse.next();
   }
 
-  // 2. Allow access to /admin/login page without redirect loops
+  // 2. Allow access to the login pages themselves without redirect loops
   const isAdminLoginPage = pathname === '/admin/login';
+  const isStaffLoginPage = pathname === '/staff/login';
 
   let response = NextResponse.next({
     request: {
@@ -46,6 +49,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   let isAdmin = false;
+  let isStaff = false;
   if (user) {
     // Query staff_users table to check role
     const { data: staffUser } = await supabase
@@ -54,12 +58,13 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    if (staffUser?.role === 'admin') {
-      isAdmin = true;
+    if (staffUser) {
+      isStaff = true;
+      isAdmin = staffUser.role === 'admin';
     }
   }
 
-  // 4. Handle /admin/login page when already logged in as Admin
+  // 4. Handle the login pages when already logged in
   if (isAdminLoginPage) {
     if (isAdmin) {
       const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/admin/analytics';
@@ -67,24 +72,35 @@ export async function middleware(request: NextRequest) {
     }
     return response;
   }
+  if (isStaffLoginPage) {
+    if (isStaff) {
+      const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/staff/orders';
+      return NextResponse.redirect(new URL(redirectTo, request.url));
+    }
+    return response;
+  }
 
-  // 5. If not authenticated or not admin:
-  if (!user || !isAdmin) {
-    if (isAdminApi) {
+  // 5. Admin routes require the admin role; staff routes require any staff_users row.
+  const requiresAdmin = isAdminPage || isAdminApi;
+  const isAuthorized = requiresAdmin ? isAdmin : isStaff;
+
+  if (!user || !isAuthorized) {
+    if (isAdminApi || isStaffApi) {
       return NextResponse.json(
         {
           success: false,
           error: !user
             ? 'Unauthorized: Authentication required.'
-            : 'Forbidden: Admin privileges required.',
+            : `Forbidden: ${requiresAdmin ? 'Admin' : 'Staff'} privileges required.`,
         },
         { status: !user ? 401 : 403 }
       );
     }
 
-    // Page request -> Redirect to /admin/login with return-to path
+    // Page request -> redirect to the matching login page with return-to path
     const returnUrl = encodeURIComponent(pathname + search);
-    const loginUrl = new URL(`/admin/login?redirectTo=${returnUrl}`, request.url);
+    const loginPath = requiresAdmin ? '/admin/login' : '/staff/login';
+    const loginUrl = new URL(`${loginPath}?redirectTo=${returnUrl}`, request.url);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -95,5 +111,7 @@ export const config = {
   matcher: [
     '/admin/:path*',
     '/api/admin/:path*',
+    '/staff/:path*',
+    '/api/staff/:path*',
   ],
 };
