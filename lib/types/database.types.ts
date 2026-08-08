@@ -46,6 +46,8 @@ export interface Order {
   table_id: string;
   status: OrderStatus;
   total: number;
+  cancelled_by?: 'customer' | 'staff' | string | null;
+  is_dismissed?: boolean;
   created_at: string;
   updated_at: string;
   table?: TableRow;

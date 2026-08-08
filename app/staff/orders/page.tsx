@@ -16,6 +16,11 @@ export default function StaffOrdersDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+  const [formattedSyncTime, setFormattedSyncTime] = useState<string>('');
+
+  useEffect(() => {
+    setFormattedSyncTime(lastRefreshed.toLocaleTimeString());
+  }, [lastRefreshed]);
 
   const loadOrders = useCallback(async () => {
     const data = await fetchAllActiveOrders();
@@ -97,8 +102,8 @@ export default function StaffOrdersDashboard() {
                 Live Realtime
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Auto-updating via Supabase Realtime • Last sync: {lastRefreshed.toLocaleTimeString()}
+            <p className="text-xs text-slate-400 mt-0.5" suppressHydrationWarning>
+              Auto-updating via Supabase Realtime • Last sync: {formattedSyncTime}
             </p>
           </div>
         </div>

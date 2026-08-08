@@ -37,6 +37,22 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Custom dark scrollbars for webkit */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
 }
 
 @layer components {
@@ -135,39 +151,135 @@ body {
   }
 }
 
-/* Print Styles for QR Code Cards */
+/* Print Styles for QR Code Cards & Thermal Receipts */
 @media print {
-  body {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
   }
 
-  .no-print {
+  /* Hide background dashboard UI: headers, navs, forms, buttons, cards */
+  header,
+  nav,
+  aside,
+  form,
+  button,
+  .table-card,
+  .no-print,
+  .print\:hidden {
     display: none !important;
   }
 
-  .print-area {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 1. Cashier Thermal POS Receipt Print */
+  .print-receipt-modal {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: #ffffff !important;
     display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 99999 !important;
+  }
+
+  .print-dialog-box {
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    max-width: 80mm !important;
+    width: 80mm !important;
+  }
+
+  #printable-receipt-area {
+    display: block !important;
+    width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 12px !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  #printable-receipt-area * {
+    color: #000000 !important;
+  }
+
+  /* 2. Admin Batch Print QR Table Stand Cards (Exactly 4 per A4 Page) */
+  .printable-qr-modal-wrapper,
+  .printable-qr-modal-box,
+  .print-area {
+    position: static !important;
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    max-width: 100% !important;
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    z-index: 99999 !important;
+  }
+
+  .printable-qr-page {
+    display: block !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    width: 190mm !important;
+    height: 255mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .printable-qr-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 
   .printable-qr-grid {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 2rem !important;
-    page-break-inside: avoid;
+    grid-template-rows: repeat(2, 1fr) !important;
+    gap: 8mm !important;
+    width: 100% !important;
+    height: 255mm !important;
+    box-sizing: border-box !important;
   }
 
   .printable-qr-stand {
-    border: 2px dashed #cbd5e1 !important;
+    border: 2px dashed #475569 !important;
     border-radius: 1rem !important;
-    padding: 1.5rem !important;
+    padding: 10px !important;
     text-align: center !important;
     background-color: #ffffff !important;
     color: #0f172a !important;
     box-shadow: none !important;
-    page-break-inside: avoid !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 120mm !important;
+    max-height: 120mm !important;
+    width: 100% !important;
   }
 }

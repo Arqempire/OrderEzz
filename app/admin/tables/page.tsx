@@ -55,7 +55,7 @@ export default function AdminTablesPage() {
   return (
     <main className="admin-container space-y-8">
       {/* Top Navbar */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800 no-print print:hidden">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-purple-500 text-slate-950 flex items-center justify-center font-bold shadow-lg shadow-purple-500/20">
             <QrCode size={22} />
@@ -70,47 +70,53 @@ export default function AdminTablesPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
+          <Button
+            variant="amber"
+            size="sm"
+            onClick={() => setIsBatchPrintOpen(true)}
+            disabled={tables.length === 0}
+            className="flex-shrink-0 text-xs py-2 px-3.5"
+          >
+            <Printer size={14} /> Batch Print Cards
+          </Button>
+
           <Link
             href="/admin/analytics"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5 flex-shrink-0"
           >
             <BarChart3 size={14} /> Analytics
           </Link>
 
-          <Button
-            variant="amber"
-            onClick={() => setIsBatchPrintOpen(true)}
-            disabled={tables.length === 0}
+          <Link
+            href="/admin/menu"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex-shrink-0"
           >
-            <Printer size={16} /> Batch Print All Cards
-          </Button>
+            Manage Menu
+          </Link>
 
           <Link
             href="/admin/staff"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5 flex-shrink-0"
           >
-            <Users size={14} /> Staff Accounts
+            <Users size={14} /> Staff
           </Link>
 
           <Link
-            href="/admin/menu"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors"
-          >
-            Manage Menu Items
-          </Link>
-          <AdminLogoutButton />
-          <Link
             href="/staff/orders"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5 flex-shrink-0"
           >
             <ArrowLeft size={14} /> Staff Kanban
           </Link>
+
+          <div className="flex-shrink-0">
+            <AdminLogoutButton />
+          </div>
         </div>
       </header>
 
       {/* Add New Table Form */}
-      <section className="glass-panel rounded-3xl p-6 border border-slate-800 space-y-4 max-w-xl">
+      <section className="glass-panel rounded-3xl p-6 border border-slate-800 space-y-4 max-w-xl no-print print:hidden">
         <h2 className="text-base font-bold text-slate-100 font-display">Add New Restaurant Table</h2>
         
         <form onSubmit={handleCreateTable} className="flex items-center gap-3">
@@ -129,7 +135,7 @@ export default function AdminTablesPage() {
       </section>
 
       {/* Tables Grid */}
-      <section className="space-y-4">
+      <section className="space-y-4 no-print print:hidden">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-200 font-display">
             Active Restaurant Tables ({tables.length})

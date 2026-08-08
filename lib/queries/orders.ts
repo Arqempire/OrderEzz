@@ -110,11 +110,20 @@ export async function fetchAllActiveOrders(): Promise<Order[]> {
 /**
  * Advances or updates an order's status (Staff action).
  */
-export async function updateOrderStatus(orderId: string, newStatus: OrderStatus): Promise<boolean> {
+export async function updateOrderStatus(
+  orderId: string,
+  newStatus: OrderStatus,
+  cancelledBy?: 'customer' | 'staff'
+): Promise<boolean> {
   const supabase = createClient();
+  const payload: { status: OrderStatus; cancelled_by?: string } = { status: newStatus };
+  if (newStatus === 'cancelled') {
+    payload.cancelled_by = cancelledBy || 'staff';
+  }
+
   const { error } = await supabase
     .from('orders')
-    .update({ status: newStatus })
+    .update(payload)
     .eq('id', orderId);
 
   if (error) {

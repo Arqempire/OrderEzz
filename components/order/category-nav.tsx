@@ -16,8 +16,8 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   onSelectCategory,
 }) => {
   return (
-    <div className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 py-3 px-4 -mx-4 mb-6">
-      <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar scroll-smooth">
+    <div className="sticky top-[52px] z-25 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/80 py-2 px-4 -mx-4 mb-4">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
         {categories.map((cat) => {
           const isActive = activeCategoryId === cat.id;
           return (
@@ -25,7 +25,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
               key={cat.id}
               onClick={() => onSelectCategory(cat.id)}
               className={clsx(
-                'px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer',
+                'px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 touch-manipulation',
                 isActive ? 'category-tab-active' : 'category-tab-inactive'
               )}
             >

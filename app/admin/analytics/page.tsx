@@ -198,44 +198,59 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <Link
-            href="/admin/feedback"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5"
-          >
-            <MessageSquare size={14} /> Customer Reviews
-          </Link>
-          <Link
-            href="/admin/menu"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors"
-          >
-            Manage Menu
-          </Link>
-          <Link
-            href="/admin/tables"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors"
-          >
-            Manage Tables
-          </Link>
-          <Link
-            href="/admin/staff"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors"
-          >
-            Manage Staff
-          </Link>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
           <Link
             href="/admin/place-order"
-            className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5"
+            className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3.5 py-2 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5 flex-shrink-0"
           >
             <ChefHat size={14} /> Place Order
           </Link>
+
+          <Link
+            href="/admin/cashier"
+            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-2 rounded-xl border border-emerald-500/30 transition-all flex items-center gap-1.5 flex-shrink-0"
+          >
+            <IndianRupee size={14} /> Cashier
+          </Link>
+
+          <Link
+            href="/admin/feedback"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5 flex-shrink-0"
+          >
+            <MessageSquare size={14} /> Reviews
+          </Link>
+
+          <Link
+            href="/admin/menu"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex-shrink-0"
+          >
+            Menu
+          </Link>
+
+          <Link
+            href="/admin/tables"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex-shrink-0"
+          >
+            Tables
+          </Link>
+
+          <Link
+            href="/admin/staff"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex-shrink-0"
+          >
+            Staff
+          </Link>
+
           <Link
             href="/staff/orders"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5"
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5 flex-shrink-0"
           >
             <ArrowLeft size={14} /> Staff Dashboard
           </Link>
-          <AdminLogoutButton />
+
+          <div className="flex-shrink-0">
+            <AdminLogoutButton />
+          </div>
         </div>
       </header>
 

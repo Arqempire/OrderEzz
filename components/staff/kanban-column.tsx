@@ -24,11 +24,26 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   const [isCompletedExpanded, setIsCompletedExpanded] = useState(false);
 
   const activeOrders = status === 'served'
-    ? orders.filter((o) => o.status === 'served')
+    ? orders.filter((o) => {
+        if (o.status !== 'served') return false;
+        const secondsAgo = Math.floor(
+          (Date.now() - new Date(o.updated_at || o.created_at).getTime()) / 1000
+        );
+        return secondsAgo < 10;
+      })
     : orders;
 
   const completedPaidToday = status === 'served'
-    ? orders.filter((o) => o.status === 'paid')
+    ? orders.filter((o) => {
+        if (o.status === 'paid') return true;
+        if (o.status === 'served') {
+          const secondsAgo = Math.floor(
+            (Date.now() - new Date(o.updated_at || o.created_at).getTime()) / 1000
+          );
+          return secondsAgo >= 10;
+        }
+        return false;
+      })
     : [];
 
   return (
@@ -70,7 +85,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       </div>
 
       {/* Cards List */}
-      <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+      <div className="space-y-3 flex-1 overflow-y-auto overflow-x-hidden no-scrollbar pr-0.5">
         {activeOrders.length === 0 && (!isCompletedExpanded || completedPaidToday.length === 0) ? (
           <div className="h-32 border border-dashed border-slate-800/80 rounded-xl flex items-center justify-center text-xs text-slate-600">
             No orders

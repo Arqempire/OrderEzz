@@ -154,28 +154,28 @@ function CustomerOrderContent() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-28">
       {/* Top Banner Header */}
-      <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
-        <div className="max-w-lg mx-auto flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
-              <UtensilsCrossed size={18} />
+      <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 px-4 py-2.5">
+        <div className="max-w-lg mx-auto flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+              <UtensilsCrossed size={16} />
             </div>
             <div>
-              <h1 className="text-base font-extrabold font-display leading-tight text-slate-100">
-                OrderEzz Menu
+              <h1 className="text-sm font-extrabold font-display leading-tight text-slate-100">
+                OrderEzz
               </h1>
-              <span className="text-[11px] text-amber-400 font-medium">Dine-In Table Ordering</span>
+              <span className="text-[10px] text-amber-400 font-medium block -mt-0.5 whitespace-nowrap">Table Menu</span>
             </div>
           </div>
 
-          <div className="relative flex-1 max-w-[180px]">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative flex-1 max-w-[160px] sm:max-w-[200px]">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search dishes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-7 pr-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
             />
           </div>
         </div>

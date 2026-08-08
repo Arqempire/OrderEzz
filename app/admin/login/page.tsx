@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { fetchStaffProfile } from '@/lib/queries/staff';
-import { ShieldCheck, Lock, Mail, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowLeft, UtensilsCrossed } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -167,9 +167,10 @@ function AdminLoginForm() {
         <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs">
           <Link
             href="/staff/login"
-            className="text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1 font-semibold"
+            className="text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1.5 font-semibold"
           >
-            Kitchen Staff Login
+            <UtensilsCrossed size={14} />
+            <span>Kitchen Staff Login</span>
           </Link>
           <Link
             href="/"
