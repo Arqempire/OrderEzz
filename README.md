@@ -129,7 +129,10 @@ ON CONFLICT (id) DO UPDATE SET role = 'admin';
 ```
 
 ---
-
+> **Note:** Migration `020` is a security fix — it closes a privilege-escalation
+> hole in `staff_users` (any anon request could previously set `role = 'admin'`)
+> and removes public read access to the full `orders`/`order_items` tables.
+> It must be applied to every environment, including any fresh Supabase project.
 ## Local Development Server
 
 ```bash
