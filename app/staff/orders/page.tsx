@@ -22,6 +22,19 @@ export default function StaffOrdersDashboard() {
     setIsLoading(false);
   }, []);
 
+  const handleOrderUpdated = useCallback(
+    (orderId?: string, newStatus?: Order['status']) => {
+      if (orderId && newStatus) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+        );
+      } else {
+        loadOrders();
+      }
+    },
+    [loadOrders]
+  );
+
   useEffect(() => {
     loadOrders();
 
@@ -127,25 +140,25 @@ export default function StaffOrdersDashboard() {
           title="Received"
           status="received"
           orders={getOrdersByStatus('received')}
-          onOrderUpdated={loadOrders}
+          onOrderUpdated={handleOrderUpdated}
         />
         <KanbanColumn
           title="Preparing"
           status="preparing"
           orders={getOrdersByStatus('preparing')}
-          onOrderUpdated={loadOrders}
+          onOrderUpdated={handleOrderUpdated}
         />
         <KanbanColumn
           title="Ready for Pickup"
           status="ready"
           orders={getOrdersByStatus('ready')}
-          onOrderUpdated={loadOrders}
+          onOrderUpdated={handleOrderUpdated}
         />
         <KanbanColumn
           title="Served / Active"
           status="served"
           orders={getOrdersByStatus('served')}
-          onOrderUpdated={loadOrders}
+          onOrderUpdated={handleOrderUpdated}
         />
       </div>
     </main>

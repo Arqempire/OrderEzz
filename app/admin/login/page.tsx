@@ -34,7 +34,7 @@ function AdminLoginForm() {
 
           if (isAdmin) {
             toast.success('Active admin session restored');
-            router.replace(redirectTo);
+            window.location.href = redirectTo;
             return;
           }
         }
@@ -46,7 +46,7 @@ function AdminLoginForm() {
     };
 
     checkActiveSession();
-  }, [redirectTo, router]);
+  }, [redirectTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +83,7 @@ function AdminLoginForm() {
       }
 
       toast.success('Admin authentication successful!');
-      router.replace(redirectTo);
+      window.location.href = redirectTo;
     } catch (err: any) {
       console.error('Exception during admin login:', err);
       toast.error(err.message || 'An error occurred during sign in');

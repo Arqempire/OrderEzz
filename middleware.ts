@@ -62,9 +62,6 @@ export async function middleware(request: NextRequest) {
   let isAdmin = false;
   let isStaff = false;
   if (user) {
-  let isAdmin = false;
-  let isStaff = false;
-  if (user) {
     // Check role via Security Definer RPC function first (bypasses RLS locks)
     const { data: rpcIsAdmin } = await supabase.rpc('is_admin');
     if (rpcIsAdmin === true) {

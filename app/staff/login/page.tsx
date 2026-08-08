@@ -50,7 +50,7 @@ export default function StaffLoginPage() {
     }
 
     toast.success('Signed in successfully!');
-    router.push('/staff/orders');
+    window.location.href = '/staff/orders';
   };
 
   return (

@@ -37,16 +37,40 @@ export async function placeCustomerOrder(
  */
 export async function fetchOrderDetailsById(orderId: string): Promise<Order | null> {
   const supabase = createClient();
-  const { data, error } = await supabase.rpc('get_order_status', {
-    p_order_id: orderId,
-  });
 
-  if (error || !data) {
-    console.error('Error fetching order details:', error);
+  // 1. Try RPC get_order_status first
+  try {
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_order_status', {
+      p_order_id: orderId,
+    });
+
+    if (!rpcError && rpcData && typeof rpcData === 'object' && (rpcData as any).id) {
+      return rpcData as Order;
+    }
+  } catch (err) {
+    console.warn('RPC get_order_status failed, trying direct select fallback:', err);
+  }
+
+  // 2. Fallback direct table select
+  const { data: directData, error: directError } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      table:tables(*),
+      order_items(
+        *,
+        menu_item:menu_items(*)
+      )
+    `)
+    .eq('id', orderId)
+    .single();
+
+  if (directError) {
+    console.error('Error fetching order details via direct select:', directError);
     return null;
   }
 
-  return data as Order;
+  return directData as Order;
 }
 
 /**

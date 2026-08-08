@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { fetchOrderDetailsById } from '@/lib/queries/orders';
 import { Order } from '@/lib/types/database.types';
 import { OrderStatusTracker } from '@/components/order/order-status-tracker';
+import { TableRequestButtons } from '@/components/order/table-request-buttons';
 import { Loader2, AlertCircle, UtensilsCrossed, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -87,6 +88,14 @@ function OrderStatusContent() {
           )}
         </div>
       </header>
+
+      {/* Table Quick Assistance Bar ('Call Waiter' & 'Request Water') */}
+      {order.table_id && (
+        <div className="mb-6 flex items-center justify-between bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl px-3.5 py-2.5">
+          <span className="text-xs font-bold text-slate-300 font-display">Need Assistance?</span>
+          <TableRequestButtons tableId={order.table_id} tableNumber={order.table?.table_number} />
+        </div>
+      )}
 
       {/* Realtime Order Tracker Component */}
       <OrderStatusTracker initialOrder={order} />

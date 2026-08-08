@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 interface OrderCardProps {
   order: Order;
-  onStatusUpdated?: () => void;
+  onStatusUpdated?: (orderId?: string, newStatus?: OrderStatus) => void;
 }
 
 const nextStatusMap: Record<OrderStatus, OrderStatus | null> = {
@@ -35,20 +35,26 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
 
   const handleAdvanceStatus = async () => {
     if (!nextStatus) return;
+    // Optimistic UI update
+    onStatusUpdated?.(order.id, nextStatus);
+    toast.success(`Order #${order.id.slice(0, 5)} updated to ${nextStatus}`);
+
     const success = await updateOrderStatus(order.id, nextStatus);
-    if (success) {
-      toast.success(`Order #${order.id.slice(0, 5)} updated to ${nextStatus}`);
-      onStatusUpdated?.();
-    } else {
+    if (!success) {
       toast.error('Failed to update order status');
+      onStatusUpdated?.();
     }
   };
 
   const handleCancelOrder = async () => {
     if (confirm('Are you sure you want to cancel this order?')) {
+      // Optimistic UI update
+      onStatusUpdated?.(order.id, 'cancelled');
+      toast.info('Order cancelled');
+
       const success = await updateOrderStatus(order.id, 'cancelled');
-      if (success) {
-        toast.info('Order cancelled');
+      if (!success) {
+        toast.error('Failed to cancel order');
         onStatusUpdated?.();
       }
     }
