@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { MenuImportItem } from '@/lib/types/database.types';
 import { confirmImportBatch, discardImportBatch } from '@/lib/queries/import';
 import { Button } from '@/components/ui/button';
