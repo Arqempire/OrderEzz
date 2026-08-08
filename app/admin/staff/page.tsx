@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { StaffUser, StaffRole } from '@/lib/types/database.types';
 import { fetchAllStaffUsers } from '@/lib/queries/staff';
 import { Button } from '@/components/ui/button';
