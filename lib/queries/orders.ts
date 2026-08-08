@@ -30,29 +30,18 @@ export async function placeCustomerOrder(
 }
 
 /**
- * Fetches order details including table information and order items for customer live status page.
+ * Fetches order details for the customer live status page via a scoped RPC
+ * (get_order_status) that returns only the single requested order — direct
+ * table SELECT on `orders`/`order_items` is staff-only, since it would
+ * otherwise let any anon request list every order in the restaurant.
  */
 export async function fetchOrderDetailsById(orderId: string): Promise<Order | null> {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      table:tables(id, table_number),
-      order_items(
-        id,
-        order_id,
-        menu_item_id,
-        quantity,
-        notes,
-        price_at_order,
-        menu_item:menu_items(name, image_url)
-      )
-    `)
-    .eq('id', orderId)
-    .single();
+  const { data, error } = await supabase.rpc('get_order_status', {
+    p_order_id: orderId,
+  });
 
-  if (error) {
+  if (error || !data) {
     console.error('Error fetching order details:', error);
     return null;
   }
@@ -80,6 +69,7 @@ export async function fetchAllActiveOrders(): Promise<Order[]> {
         menu_item:menu_items(name, image_url)
       )
     `)
+    .in('status', ['received', 'preparing', 'ready', 'served'])
     .order('created_at', { ascending: true });
 
   if (error) {
