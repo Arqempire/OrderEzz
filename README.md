@@ -59,7 +59,7 @@ In your Supabase Dashboard SQL Editor, run the migration scripts in numerical or
 17. `supabase/migrations/017_admin_auth_rls_security.sql`
 18. `supabase/migrations/018_random_qr_tokens.sql`
 19. `supabase/migrations/019_table_requests.sql`
-
+20. `supabase/migrations/020_fix_critical_rls_holes.sql`
 Enable **Realtime** in Supabase for tables `orders`, `menu_items`, and `table_requests`:
 - Go to **Database** -> **Publications** -> **supabase_realtime** -> Enable `orders`, `menu_items`, and `table_requests`.
 
