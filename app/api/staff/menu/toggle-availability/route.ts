@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { verifyStaffSession } from '@/lib/auth/staff-guard';
 
 export async function POST(request: Request) {
   try {
+    const auth = await verifyStaffSession(request);
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { success: false, error: auth.error },
+        { status: auth.status }
+      );
+    }
+
     const body = await request.json();
     const { itemId, isAvailable } = body;
 
