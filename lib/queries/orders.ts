@@ -78,6 +78,9 @@ export async function fetchOrderDetailsById(orderId: string): Promise<Order | nu
  */
 export async function fetchAllActiveOrders(): Promise<Order[]> {
   const supabase = createClient();
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
   const { data, error } = await supabase
     .from('orders')
     .select(`
@@ -93,7 +96,7 @@ export async function fetchAllActiveOrders(): Promise<Order[]> {
         menu_item:menu_items(name, image_url)
       )
     `)
-    .in('status', ['received', 'preparing', 'ready', 'served'])
+    .or(`status.in.(received,preparing,ready,served,cancelled),and(status.eq.paid,created_at.gte.${startOfToday.toISOString()})`)
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -120,4 +123,21 @@ export async function updateOrderStatus(orderId: string, newStatus: OrderStatus)
   }
 
   return true;
+}
+
+/**
+ * Cancels a customer order securely via RPC if status is still 'received'.
+ */
+export async function cancelCustomerOrder(orderId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient();
+  const { error } = await supabase.rpc('cancel_customer_order', {
+    p_order_id: orderId,
+  });
+
+  if (error) {
+    console.error('Error cancelling customer order:', error);
+    return { success: false, error: error.message || 'Failed to cancel order' };
+  }
+
+  return { success: true };
 }

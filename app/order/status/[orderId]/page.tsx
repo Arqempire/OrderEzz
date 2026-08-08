@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { fetchOrderDetailsById } from '@/lib/queries/orders';
 import { Order } from '@/lib/types/database.types';
 import { OrderStatusTracker } from '@/components/order/order-status-tracker';
+import { ActiveOrderBanner } from '@/components/order/active-order-banner';
 import { TableRequestButtons } from '@/components/order/table-request-buttons';
 import { Loader2, AlertCircle, UtensilsCrossed, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -59,7 +60,7 @@ function OrderStatusContent() {
   const tableQrToken = tokenFromUrl || order.table?.qr_token;
 
   return (
-    <main className="menu-container px-4 py-6">
+    <main className="menu-container px-4 py-6 pb-28">
       {/* Top Header with Navigation Buttons */}
       <header className="flex items-center justify-between mb-6 pb-2 border-b border-slate-800">
         <div className="flex items-center gap-2.5">
@@ -99,6 +100,9 @@ function OrderStatusContent() {
 
       {/* Realtime Order Tracker Component */}
       <OrderStatusTracker initialOrder={order} />
+
+      {/* Persistent Active Orders Banner */}
+      {tableQrToken && <ActiveOrderBanner tableToken={tableQrToken} />}
     </main>
   );
 }

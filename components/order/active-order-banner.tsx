@@ -89,6 +89,7 @@ export const ActiveOrderBanner: React.FC<ActiveOrderBannerProps> = ({
 
   const currentOrder = activeOrders[selectedIndex] || activeOrders[0];
   const tableNum = currentOrder.table?.table_number;
+  const combinedTotal = activeOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
 
   // Stack above sticky cart bar (bottom-24) if cart has items, else bottom-4
   const bottomPosition = hasCartItems ? 'bottom-24' : 'bottom-4';
@@ -110,10 +111,15 @@ export const ActiveOrderBanner: React.FC<ActiveOrderBannerProps> = ({
               </span>
               <OrderStatusBadge status={currentOrder.status} className="flex-shrink-0 !py-0.5 text-[10px]" />
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5 truncate">
-              {activeOrders.length > 1
-                ? `Order ${selectedIndex + 1} of ${activeOrders.length} · ₹${currentOrder.total.toFixed(2)}`
-                : `Total: ₹${currentOrder.total.toFixed(2)}`}
+            <p className="text-[11px] text-slate-300 font-semibold mt-0.5 truncate">
+              {activeOrders.length > 1 ? (
+                <>
+                  <span className="text-amber-400 font-bold">Table Total: ₹{combinedTotal.toFixed(2)}</span>
+                  <span className="text-slate-400 font-normal ml-1">({activeOrders.length} orders)</span>
+                </>
+              ) : (
+                `Total: ₹${currentOrder.total.toFixed(2)}`
+              )}
             </p>
           </div>
         </div>
@@ -123,9 +129,9 @@ export const ActiveOrderBanner: React.FC<ActiveOrderBannerProps> = ({
             <button
               onClick={() => setSelectedIndex((prev) => (prev + 1) % activeOrders.length)}
               className="text-[10px] text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2 py-1.5 rounded-lg border border-amber-500/20 font-bold transition-all"
-              title="Next Order"
+              title="Switch between active orders"
             >
-              Next ({activeOrders.length})
+              Order #{selectedIndex + 1}
             </button>
           )}
 

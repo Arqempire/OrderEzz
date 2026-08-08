@@ -65,6 +65,8 @@ In your Supabase Dashboard SQL Editor, run the migration scripts in numerical or
 19. `supabase/migrations/019_table_requests.sql`
 20. `supabase/migrations/020_fix_staff_users_rls.sql`
 21. `supabase/migrations/021_fix_order_status_rpc.sql`
+22. `supabase/migrations/022_add_mineral_water_to_menu.sql`
+23. `supabase/migrations/023_cancel_customer_order_rpc.sql`
 Enable **Realtime** in Supabase for tables `orders`, `menu_items`, and `table_requests`:
 - Go to **Database** -> **Publications** -> **supabase_realtime** -> Enable `orders`, `menu_items`, and `table_requests`.
 

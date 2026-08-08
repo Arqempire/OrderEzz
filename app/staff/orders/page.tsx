@@ -2,12 +2,15 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Order } from '@/lib/types/database.types';
-import { fetchAllActiveOrders } from '@/lib/queries/orders';
+import { fetchAllActiveOrders, updateOrderStatus } from '@/lib/queries/orders';
 import { KanbanColumn } from '@/components/staff/kanban-column';
+import { StaffLogoutButton } from '@/components/staff/staff-logout-button';
 import { TableRequestsPanel } from '@/components/staff/table-requests-panel';
 import { createClient } from '@/lib/supabase/client';
-import { UtensilsCrossed, RefreshCw, LogOut, Settings, MessageSquare } from 'lucide-react';
+import { UtensilsCrossed, RefreshCw, LogOut, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
+
+import { toast } from 'sonner';
 
 export default function StaffOrdersDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -15,7 +18,6 @@ export default function StaffOrdersDashboard() {
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
   const loadOrders = useCallback(async () => {
-    setIsLoading(true);
     const data = await fetchAllActiveOrders();
     setOrders(data);
     setLastRefreshed(new Date());
@@ -34,6 +36,20 @@ export default function StaffOrdersDashboard() {
     },
     [loadOrders]
   );
+
+  const handleClearAllCancelled = async () => {
+    const cancelledOrders = orders.filter((o) => o.status === 'cancelled');
+    if (cancelledOrders.length === 0) return;
+
+    if (confirm(`Are you sure you want to clear all ${cancelledOrders.length} cancelled orders?`)) {
+      setOrders((prev) => prev.filter((o) => o.status !== 'cancelled'));
+      toast.info(`Cleared ${cancelledOrders.length} cancelled orders`);
+
+      await Promise.all(
+        cancelledOrders.map((o) => updateOrderStatus(o.id, 'paid'))
+      );
+    }
+  };
 
   useEffect(() => {
     loadOrders();
@@ -113,21 +129,7 @@ export default function StaffOrdersDashboard() {
             Reviews & Feedback
           </Link>
 
-          <Link
-            href="/admin/tables"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 flex items-center gap-1.5 transition-colors"
-          >
-            <Settings size={14} />
-            Admin Panel
-          </Link>
-
-          <Link
-            href="/staff/login"
-            className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-3 py-2 rounded-xl border border-red-500/30 flex items-center gap-1.5 transition-colors"
-          >
-            <LogOut size={14} />
-            Exit
-          </Link>
+          <StaffLogoutButton />
         </div>
       </header>
 
@@ -155,10 +157,17 @@ export default function StaffOrdersDashboard() {
           onOrderUpdated={handleOrderUpdated}
         />
         <KanbanColumn
-          title="Served / Active"
+          title="Served"
           status="served"
-          orders={getOrdersByStatus('served')}
+          orders={orders.filter((o) => o.status === 'served' || o.status === 'paid')}
           onOrderUpdated={handleOrderUpdated}
+        />
+        <KanbanColumn
+          title="Cancelled"
+          status="cancelled"
+          orders={getOrdersByStatus('cancelled')}
+          onOrderUpdated={handleOrderUpdated}
+          onClearAll={handleClearAllCancelled}
         />
       </div>
     </main>

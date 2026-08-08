@@ -1,5 +1,7 @@
 'use client';
 
+import { StaffLogoutButton } from '@/components/staff/staff-logout-button';
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { CustomerFeedback } from '@/lib/types/feedback.types';
 import { fetchAllCustomerFeedbacks } from '@/lib/queries/feedback';
@@ -81,12 +83,7 @@ export default function StaffFeedbackPage() {
           >
             <UtensilsCrossed size={15} /> Kitchen Orders Kanban
           </Link>
-          <Link
-            href="/staff/login"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5"
-          >
-            <ArrowLeft size={14} /> Exit Staff Portal
-          </Link>
+          <StaffLogoutButton />
         </div>
       </header>
 

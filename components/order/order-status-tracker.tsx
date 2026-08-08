@@ -4,9 +4,11 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Order, OrderStatus } from '@/lib/types/database.types';
 import { createClient } from '@/lib/supabase/client';
 import { OrderStatusBadge } from '@/components/ui/badge';
-import { CheckCircle2, Clock, Utensils, Sparkles, CheckCheck, RefreshCw, PlusCircle, Radio } from 'lucide-react';
-import { fetchOrderDetailsById } from '@/lib/queries/orders';
+import { CheckCircle2, Clock, Utensils, Sparkles, CheckCheck, RefreshCw, PlusCircle, Radio, XCircle } from 'lucide-react';
+import { fetchOrderDetailsById, cancelCustomerOrder } from '@/lib/queries/orders';
+import { getActiveOrderIdsForTable, removeOrderFromLocalStorage } from '@/lib/utils/order-session';
 import { ThankYouFeedbackCard } from '@/components/order/thank-you-feedback-card';
+import { toast } from 'sonner';
 import Link from 'next/link';
 
 interface OrderStatusTrackerProps {
@@ -23,7 +25,9 @@ const statusSteps: Array<{ key: OrderStatus; title: string; desc: string; icon: 
 
 export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialOrder }) => {
   const [order, setOrder] = useState<Order>(initialOrder);
+  const [sessionOrders, setSessionOrders] = useState<Order[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const currentStatusRef = useRef<string>(initialOrder.status);
 
   // Keep ref synchronized to avoid unnecessary useEffect re-subscriptions
@@ -37,6 +41,31 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
       setOrder(updated);
     }
   }, [order.id]);
+
+  const syncSessionOrders = useCallback(async () => {
+    const tableQrToken = order.table?.qr_token;
+    if (!tableQrToken) return;
+
+    const storedIds = getActiveOrderIdsForTable(tableQrToken);
+    if (storedIds.length <= 1) {
+      setSessionOrders([]);
+      return;
+    }
+
+    const fetched = await Promise.all(
+      storedIds.map((id) => fetchOrderDetailsById(id))
+    );
+
+    const valid = fetched.filter(
+      (o): o is Order => o !== null && o.status !== 'cancelled' && o.status !== 'paid'
+    );
+
+    setSessionOrders(valid);
+  }, [order.table?.qr_token]);
+
+  useEffect(() => {
+    syncSessionOrders();
+  }, [syncSessionOrders]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -54,6 +83,7 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
         },
         async () => {
           refreshOrder();
+          syncSessionOrders();
         }
       )
       .subscribe();
@@ -63,6 +93,7 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
       const updated = await fetchOrderDetailsById(order.id);
       if (updated && updated.status !== currentStatusRef.current) {
         setOrder(updated);
+        syncSessionOrders();
       }
     }, 8000);
 
@@ -70,12 +101,37 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
       supabase.removeChannel(channel);
       clearInterval(pollTimer);
     };
-  }, [order.id, refreshOrder]);
+  }, [order.id, refreshOrder, syncSessionOrders]);
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
-    await refreshOrder();
+    await Promise.all([refreshOrder(), syncSessionOrders()]);
     setIsRefreshing(false);
+  };
+
+  const tableQrToken = order.table?.qr_token;
+
+  const sessionTotal = sessionOrders.length > 0
+    ? sessionOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0)
+    : order.total;
+
+  const handleCancelOrder = async () => {
+    if (!confirm(`Are you sure you want to cancel Order #${order.id.slice(0, 6)}?`)) return;
+
+    setIsCancelling(true);
+    const result = await cancelCustomerOrder(order.id);
+    setIsCancelling(false);
+
+    if (result.success) {
+      toast.info('Your order has been cancelled.');
+      if (tableQrToken) {
+        removeOrderFromLocalStorage(tableQrToken, order.id);
+      }
+      setOrder((prev) => ({ ...prev, status: 'cancelled' }));
+      syncSessionOrders();
+    } else {
+      toast.error(result.error || 'Failed to cancel order.');
+    }
   };
 
   const getStepStatus = (stepKey: OrderStatus) => {
@@ -92,8 +148,6 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
   if (order.status === 'paid') {
     return <ThankYouFeedbackCard order={order} />;
   }
-
-  const tableQrToken = order.table?.qr_token;
 
   return (
     <div className="space-y-6">
@@ -126,6 +180,31 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
         <p className="text-xs text-slate-400 mt-1">
           {statusSteps.find((s) => s.key === order.status)?.desc || 'Status updated'}
         </p>
+
+        {/* Customer Cancel Order Action (Allowed only when status === 'received') */}
+        {order.status === 'received' && (
+          <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+            <span className="text-xs text-slate-400 font-medium">
+              Order can be cancelled before kitchen starts preparing
+            </span>
+            <button
+              onClick={handleCancelOrder}
+              disabled={isCancelling}
+              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 flex-shrink-0"
+            >
+              <XCircle size={14} className={isCancelling ? 'animate-spin' : ''} />
+              {isCancelling ? 'Cancelling…' : 'Cancel Order'}
+            </button>
+          </div>
+        )}
+
+        {order.status !== 'received' && order.status !== 'cancelled' && order.status !== 'paid' && (
+          <div className="mt-4 pt-3 border-t border-slate-800 text-center">
+            <span className="text-[11px] text-slate-500 italic">
+              Kitchen has started preparing your dish — cancellation is no longer available.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Explore Menu Banner Action */}
@@ -194,8 +273,9 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
 
       {/* Order Summary Items */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold text-slate-200 font-display border-b border-slate-800 pb-3">
-          Order Items Summary
+        <h3 className="text-sm font-bold text-slate-200 font-display border-b border-slate-800 pb-3 flex justify-between items-center">
+          <span>Order Items Summary</span>
+          <span className="text-xs text-slate-400 font-mono">#{order.id.slice(0, 6)}</span>
         </h3>
 
         <div className="divide-y divide-slate-800/60">
@@ -215,12 +295,29 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
           ))}
         </div>
 
-        <div className="pt-3 border-t border-slate-800 flex justify-between items-center text-sm">
-          <span className="font-semibold text-slate-400">Total Amount</span>
-          <span className="text-lg font-extrabold text-amber-400 font-display">
-            ₹{order.total.toFixed(2)}
-          </span>
-        </div>
+        {sessionOrders.length > 1 ? (
+          <div className="pt-3 border-t border-slate-800 space-y-2">
+            <div className="flex justify-between items-center text-xs text-slate-400">
+              <span>This Order Total (#{order.id.slice(0, 6)})</span>
+              <span className="font-bold text-slate-200 font-mono">₹{order.total.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-800/80">
+              <span className="font-bold text-amber-400 font-display">
+                Combined Table Session Bill ({sessionOrders.length} active orders)
+              </span>
+              <span className="text-xl font-extrabold text-amber-400 font-display">
+                ₹{sessionTotal.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="pt-3 border-t border-slate-800 flex justify-between items-center text-sm">
+            <span className="font-semibold text-slate-400">Total Amount</span>
+            <span className="text-lg font-extrabold text-amber-400 font-display">
+              ₹{order.total.toFixed(2)}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

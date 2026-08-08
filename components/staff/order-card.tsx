@@ -3,7 +3,7 @@
 import React from 'react';
 import { Order, OrderStatus } from '@/lib/types/database.types';
 import { OrderStatusBadge } from '@/components/ui/badge';
-import { Clock, ArrowRight, XCircle } from 'lucide-react';
+import { Clock, ArrowRight, XCircle, Trash2 } from 'lucide-react';
 import { updateOrderStatus } from '@/lib/queries/orders';
 import { toast } from 'sonner';
 
@@ -60,6 +60,18 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
     }
   };
 
+  const handleDismissOrder = async () => {
+    // Optimistic UI update to remove from board
+    onStatusUpdated?.(order.id, 'paid');
+    toast.info('Cancelled order cleared');
+
+    const success = await updateOrderStatus(order.id, 'paid');
+    if (!success) {
+      toast.error('Failed to clear cancelled order');
+      onStatusUpdated?.();
+    }
+  };
+
   const timeAgo = (dateStr: string) => {
     const minutes = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 60000);
     if (minutes < 1) return 'Just now';
@@ -69,25 +81,46 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
 
   return (
     <div className="kanban-card group">
-      {/* Top Header: Table Number & Time */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="bg-amber-500 text-slate-950 font-extrabold text-sm px-2.5 py-0.5 rounded-lg font-display">
+      {/* Top Header: Table Number, Time & Cancel Action */}
+      <div className="flex items-center justify-between pb-2 border-b border-slate-800 gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="bg-amber-500 text-slate-950 font-extrabold text-xs px-2.5 py-0.5 rounded-lg font-display flex-shrink-0">
             Table {order.table?.table_number ?? '?'}
           </span>
-          <span className="text-xs text-slate-400 font-mono">#{order.id.slice(0, 6)}</span>
+          <span className="text-[11px] text-slate-400 font-mono truncate">#{order.id.slice(0, 6)}</span>
         </div>
-        <div className="flex items-center gap-1 text-[11px] text-slate-400">
-          <Clock size={12} />
-          {timeAgo(order.created_at)}
+
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {order.status === 'cancelled' ? (
+            <span className="bg-red-500/10 text-red-400 border border-red-500/30 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+              Cancelled
+            </span>
+          ) : (
+            <>
+              <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                <Clock size={12} />
+                {timeAgo(order.created_at)}
+              </div>
+              {order.status !== 'paid' && (
+                <button
+                  onClick={handleCancelOrder}
+                  className="text-slate-500 hover:text-red-400 p-1 rounded-md hover:bg-red-500/10 transition-colors ml-1"
+                  title="Cancel Order"
+                >
+                  <XCircle size={15} />
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
       {/* Items list */}
       <div className="space-y-2 py-1">
         {order.order_items?.map((item) => (
-          <div key={item.id} className="text-xs flex items-start justify-between">
-            <div>
+          <div key={item.id} className="text-xs flex items-start justify-between gap-2">
+            <div className="min-w-0">
               <span className="font-bold text-amber-400 mr-1.5">{item.quantity}x</span>
               <span className="text-slate-200 font-medium">{item.menu_item?.name || 'Item'}</span>
               {item.notes && (
@@ -96,40 +129,46 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
                 </p>
               )}
             </div>
-            <span className="text-slate-400 font-mono">
+            <span className="text-slate-400 font-mono flex-shrink-0">
               ₹{(item.price_at_order * item.quantity).toFixed(2)}
             </span>
           </div>
         ))}
       </div>
 
-      {/* Footer & Action Buttons */}
-      <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2 mt-auto">
-        <span className="text-sm font-extrabold text-slate-100 font-display">
-          ₹{order.total.toFixed(2)}
-        </span>
-
-        <div className="flex items-center gap-1.5">
-          {order.status !== 'paid' && order.status !== 'cancelled' && (
-            <button
-              onClick={handleCancelOrder}
-              className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
-              title="Cancel Order"
-            >
-              <XCircle size={16} />
-            </button>
-          )}
-
-          {nextStatus && (
-            <button
-              onClick={handleAdvanceStatus}
-              className="staff-action-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/10"
-            >
-              {actionLabelMap[order.status]}
-              <ArrowRight size={14} />
-            </button>
+      {/* Footer & Primary Action Button */}
+      <div className="pt-2.5 border-t border-slate-800 flex items-center justify-between gap-2 mt-auto">
+        <div className="flex-shrink-0">
+          <span className="text-sm font-extrabold text-slate-100 font-display block whitespace-nowrap">
+            ₹{order.total.toFixed(2)}
+          </span>
+          {order.status === 'cancelled' && (
+            <span className="text-[10px] text-red-400 font-semibold italic block">
+              Cancelled by customer
+            </span>
           )}
         </div>
+
+        {order.status === 'cancelled' ? (
+          <button
+            onClick={handleDismissOrder}
+            className="text-xs font-bold text-slate-300 hover:text-red-400 bg-slate-800 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/30 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0 shadow-sm"
+            title="Clear this cancelled order from dashboard"
+          >
+            <Trash2 size={13} />
+            Clear
+          </button>
+        ) : (
+          nextStatus && (
+            <button
+              onClick={handleAdvanceStatus}
+              className="staff-action-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/10 flex-shrink-0 text-xs px-2.5 py-1.5 rounded-lg"
+            >
+              <span className="truncate">{actionLabelMap[order.status]}</span>
+              <ArrowRight size={13} className="flex-shrink-0" />
+            </button>
+          )
+        )}
       </div>
     </div>
   );
