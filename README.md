@@ -34,6 +34,10 @@ Built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, and **
    - Automatic database trigger `trigger_log_order_status_change` logs every order status change (`received` -> `preparing` -> `ready` -> `served` -> `paid`) with exact `changed_at` timestamps for precise throughput analytics.
 8. **Real-time Kitchen & Customer Updates**:
    - Staff Kanban Dashboard (`/staff/orders`) and Customer Status Page (`/order/status/[orderId]`) subscribe to Supabase Realtime updates on the `orders` table.
+   - > **Note:** Migration `020` is a security fix — it closes a privilege-escalation
+> hole in `staff_users` (any anon request could previously set `role = 'admin'`)
+> and removes public read access to the full `orders`/`order_items` tables.
+> It must be applied to every environment, including any fresh Supabase project.
 
 ---
 
@@ -129,11 +133,7 @@ ON CONFLICT (id) DO UPDATE SET role = 'admin';
 ```
 
 ---
-> **Note:** Migration `020` is a security fix — it closes a privilege-escalation
-> hole in `staff_users` (any anon request could previously set `role = 'admin'`)
-> and removes public read access to the full `orders`/`order_items` tables.
-> It must be applied to every environment, including any fresh Supabase project.
-## Local Development Server
+
 
 ```bash
 npm run dev
