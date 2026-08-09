@@ -114,18 +114,18 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
 
   return (
     <div
-      className={`kanban-card group transition-all duration-300 ${
+      className={`kanban-card group transition-all duration-300 relative overflow-hidden ${
         isCollapsing ? 'opacity-0 scale-95 max-h-0 overflow-hidden py-0 my-0 border-none' : ''
       }`}
     >
       {/* Top Header: Table Number, Order ID, Time & Cancel Action */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800 gap-2 w-full">
-        {/* Left Side: Table Badge & Order ID (ALWAYS 100% VISIBLE) */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-800 gap-1.5 w-full min-w-0">
+        {/* Left Side: Table Badge & Order ID */}
+        <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
           <span className="bg-amber-500 text-slate-950 font-extrabold text-xs px-2 py-0.5 rounded-lg font-display flex-shrink-0">
             Table {order.table?.table_number ?? '?'}
           </span>
-          <span className="text-[11px] text-slate-300 font-mono font-bold flex-shrink-0">
+          <span className="text-[11px] text-slate-300 font-mono font-bold truncate min-w-0">
             #{order.id.slice(0, 6)}
           </span>
         </div>
@@ -138,16 +138,16 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
               Clearing {countdown}s
             </span>
           ) : (
-            <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-0.5 text-[10px] text-slate-400 font-mono">
-                <Clock size={11} />
+            <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 text-[10px] text-slate-400 font-mono whitespace-nowrap">
+                <Clock size={11} className="flex-shrink-0" />
                 <span>{formatOrderTime(order.created_at)}</span>
               </div>
               {/* Cancel Button ONLY shown for active non-served/non-cancelled orders */}
               {order.status !== 'served' && order.status !== 'paid' && order.status !== 'cancelled' && (
                 <button
                   onClick={handleCancelOrder}
-                  className="text-slate-500 hover:text-red-400 p-0.5 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer flex-shrink-0"
+                  className="text-slate-400 hover:text-red-400 p-0.5 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer flex-shrink-0 ml-0.5"
                   title="Cancel Order"
                 >
                   <XCircle size={14} />

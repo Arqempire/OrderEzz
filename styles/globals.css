@@ -122,7 +122,7 @@ body {
   }
 
   .kanban-card {
-    @apply bg-slate-900/80 backdrop-blur-md rounded-xl p-4 border border-slate-800 hover:border-slate-700 transition-all flex flex-col gap-3 shadow-md;
+    @apply bg-slate-900/80 backdrop-blur-md rounded-xl p-3.5 border border-slate-800 hover:border-slate-700 transition-all flex flex-col gap-3 shadow-md relative overflow-hidden;
   }
 
   .staff-action-btn {
