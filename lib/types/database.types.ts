@@ -43,7 +43,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  table_id: string;
+  table_id: string | null;
   status: OrderStatus;
   total: number;
   cancelled_by?: 'customer' | 'staff' | string | null;

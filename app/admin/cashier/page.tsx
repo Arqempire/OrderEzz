@@ -25,9 +25,11 @@ import {
   Printer,
   X,
   History,
+  ShoppingBag,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { TakeawayBillingModal, PosCartItem } from '@/components/cashier/takeaway-billing-modal';
 
 interface TableOrderGroup {
   tableId: string;
@@ -51,6 +53,52 @@ export default function CashierPanelPage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
   const [historyFilter, setHistoryFilter] = useState<'all' | 'paid' | 'cancelled'>('all');
+  const [isTakeawayModalOpen, setIsTakeawayModalOpen] = useState<boolean>(false);
+
+  const handleTakeawayOrderCreated = (
+    orderId: string,
+    settledImmediately: boolean,
+    total: number,
+    items: PosCartItem[]
+  ) => {
+    loadData();
+
+    if (settledImmediately) {
+      setReceiptToPrint({
+        tableId: 'takeaway_counter',
+        tableNumber: 'Takeaway',
+        groupTotal: total,
+        orders: [
+          {
+            id: orderId,
+            table_id: null,
+            status: 'paid',
+            total: total,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            order_items: items.map((i, idx) => ({
+              id: `pos-${idx}`,
+              order_id: orderId,
+              menu_item_id: i.menuItemId,
+              quantity: i.quantity,
+              notes: i.notes || null,
+              price_at_order: i.price,
+              menu_item: {
+                id: i.menuItemId,
+                name: i.name,
+                price: i.price,
+                category_id: '',
+                description: null,
+                image_url: i.image_url,
+                is_available: true,
+                sort_order: 0,
+              },
+            })),
+          },
+        ],
+      });
+    }
+  };
 
   const filteredHistoryOrders = useMemo(() => {
     if (historyFilter === 'paid') return paidOrdersHistory.filter((o) => o.status === 'paid');
@@ -113,8 +161,10 @@ export default function CashierPanelPage() {
     const map = new Map<string, TableOrderGroup>();
 
     for (const order of orders) {
-      const tableId = order.table?.id || order.table_id || 'unknown';
-      const tableNumber = order.table?.table_number ?? 'Counter';
+      const hasTakeawayTag = order.order_items?.some((item) => item.notes?.includes('[Takeaway'));
+      const isTakeaway = !order.table_id || order.table?.table_number === 0 || (order.table?.table_number as unknown) === 'Takeaway' || hasTakeawayTag;
+      const tableId = isTakeaway ? 'takeaway_counter' : (order.table?.id || order.table_id || 'unknown');
+      const tableNumber = isTakeaway ? 'Takeaway' : (order.table?.table_number ?? 'Takeaway');
 
       if (!map.has(tableId)) {
         map.set(tableId, {
@@ -275,6 +325,14 @@ export default function CashierPanelPage() {
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
+            onClick={() => setIsTakeawayModalOpen(true)}
+            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+          >
+            <ShoppingBag size={16} />
+            + New Takeaway Order
+          </button>
+
+          <button
             onClick={handleManualRefresh}
             className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
@@ -395,7 +453,7 @@ export default function CashierPanelPage() {
                   <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                     <div className="flex items-center gap-2">
                       <span className="bg-amber-500 text-slate-950 font-extrabold text-sm px-3 py-1 rounded-xl font-display shadow-md shadow-amber-500/20">
-                        Table {group.tableNumber}
+                        {group.tableNumber === 'Takeaway' || group.tableNumber === 0 ? 'Takeaway' : `Table ${group.tableNumber}`}
                       </span>
                       <span className="text-xs font-bold text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full">
                         {group.orders.length} {group.orders.length === 1 ? 'order' : 'orders'}
@@ -558,8 +616,10 @@ export default function CashierPanelPage() {
                 <p className="text-[10px] text-slate-500 mt-1" suppressHydrationWarning>
                   Date: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                 </p>
-                <p className="text-xs font-bold text-slate-900 mt-1">
-                  TABLE {receiptToPrint.tableNumber}
+                <p className="text-xs font-bold text-slate-900 mt-1 uppercase">
+                  {receiptToPrint.tableNumber === 0 || receiptToPrint.tableNumber === 'Takeaway / Counter' || receiptToPrint.tableNumber === 'Takeaway'
+                    ? 'TAKEAWAY'
+                    : `TABLE ${receiptToPrint.tableNumber}`}
                 </p>
               </div>
 
@@ -786,6 +846,13 @@ export default function CashierPanelPage() {
           </div>
         </div>
       )}
+
+      {/* Takeaway / Counter Order POS Billing Modal */}
+      <TakeawayBillingModal
+        isOpen={isTakeawayModalOpen}
+        onClose={() => setIsTakeawayModalOpen(false)}
+        onOrderCreated={handleTakeawayOrderCreated}
+      />
     </main>
   );
 }

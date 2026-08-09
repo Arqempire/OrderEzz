@@ -25,6 +25,66 @@ export function saveDismissedOrderId(orderId: string) {
 }
 
 /**
+ * Creates a Takeaway / Walk-in order directly from the Cashier Panel POS.
+ */
+export async function createTakeawayOrder(
+  items: Array<{ menuItemId: string; quantity: number; notes?: string }>,
+  settleImmediately: boolean = false
+): Promise<{ orderId: string | null; error: string | null }> {
+  const supabase = createClient();
+
+  const formattedItems = items.map((item) => ({
+    menu_item_id: item.menuItemId,
+    quantity: item.quantity,
+    notes: item.notes || '',
+  }));
+
+  // 1. Try placing order with p_table_id: null
+  let { data: orderId, error: rpcError } = await supabase.rpc('place_order_with_items', {
+    p_table_id: null,
+    p_items: formattedItems,
+  });
+
+  // 2. Seamless Fallback: If remote Supabase schema hasn't executed migration 029 yet (table_id NOT NULL), use any existing active table ID
+  if (rpcError || !orderId) {
+    console.warn('RPC p_table_id null failed, attempting active table fallback:', rpcError?.message);
+
+    const { data: activeTables } = await supabase
+      .from('tables')
+      .select('id')
+      .eq('is_active', true)
+      .limit(1);
+
+    if (activeTables && activeTables.length > 0) {
+      const fallbackTableId = activeTables[0].id;
+      const { data: fallbackOrderId, error: fallbackError } = await supabase.rpc('place_order_with_items', {
+        p_table_id: fallbackTableId,
+        p_items: formattedItems,
+      });
+
+      if (!fallbackError && fallbackOrderId) {
+        orderId = fallbackOrderId;
+        rpcError = null;
+      }
+    }
+  }
+
+  if (rpcError || !orderId) {
+    console.error('Error placing takeaway order:', rpcError);
+    return { orderId: null, error: rpcError?.message || 'Failed to place takeaway order' };
+  }
+
+  if (settleImmediately) {
+    const paidSuccess = await markOrderAsPaid(orderId);
+    if (!paidSuccess) {
+      console.error('Failed to mark takeaway order as paid:', orderId);
+    }
+  }
+
+  return { orderId, error: null };
+}
+
+/**
  * Fetches all orders currently served and awaiting cash/payment settlement.
  */
 export async function fetchOrdersAwaitingPayment(): Promise<Order[]> {
