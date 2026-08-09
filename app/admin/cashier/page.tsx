@@ -12,6 +12,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { AdminLogoutButton } from '@/components/admin/admin-logout-button';
 import { OrderStatusBadge } from '@/components/ui/badge';
+import { getOrderCancellationSource } from '@/lib/utils/order-cancellation';
 import {
   IndianRupee,
   CheckCircle2,
@@ -285,17 +286,17 @@ export default function CashierPanelPage() {
       return <OrderStatusBadge status={order.status} className="!py-0.5 text-[9px]" />;
     }
 
-    const by = order.cancelled_by?.toLowerCase();
-    if (by === 'staff') {
+    const source = getOrderCancellationSource(order.id, order.cancelled_by);
+    if (source === 'customer') {
       return (
-        <span className="bg-amber-500/20 text-amber-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-md border border-amber-500/30 font-display">
-          Cancelled by Staff
+        <span className="bg-red-500/20 text-red-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-md border border-red-500/30 font-display">
+          Cancelled by Customer
         </span>
       );
     }
     return (
-      <span className="bg-red-500/20 text-red-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-md border border-red-500/30 font-display">
-        Cancelled by Customer
+      <span className="bg-amber-500/20 text-amber-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-md border border-amber-500/30 font-display">
+        Cancelled by Staff
       </span>
     );
   };
@@ -515,8 +516,10 @@ export default function CashierPanelPage() {
                             {isCancelled ? (
                               <>
                                 <span className="text-xs font-bold font-mono flex items-center gap-1">
-                                  <span className={order.cancelled_by === 'staff' ? 'text-amber-400' : 'text-red-400'}>
-                                    {order.cancelled_by === 'staff' ? 'Cancelled by Staff' : 'Cancelled by Customer'}
+                                  <span className={getOrderCancellationSource(order.id, order.cancelled_by) === 'customer' ? 'text-red-400' : 'text-amber-400'}>
+                                    {getOrderCancellationSource(order.id, order.cancelled_by) === 'customer'
+                                      ? 'Cancelled by Customer'
+                                      : 'Cancelled by Staff'}
                                   </span>
                                   <span className="text-[10px] text-slate-400 font-normal">(Excluded)</span>
                                 </span>

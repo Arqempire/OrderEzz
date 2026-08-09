@@ -3,13 +3,14 @@
 import React from 'react';
 import { Order, OrderStatus } from '@/lib/types/database.types';
 import { OrderStatusBadge } from '@/components/ui/badge';
-import { Clock, ArrowRight, XCircle, Trash2 } from 'lucide-react';
+import { Clock, ArrowRight, XCircle } from 'lucide-react';
 import { updateOrderStatus } from '@/lib/queries/orders';
+import { markOrderCancelledByStaff, getOrderCancellationSource } from '@/lib/utils/order-cancellation';
 import { toast } from 'sonner';
 
 interface OrderCardProps {
   order: Order;
-  onStatusUpdated?: (orderId?: string, newStatus?: OrderStatus) => void;
+  onStatusUpdated?: (orderId?: string, newStatus?: OrderStatus, cancelledBy?: string) => void;
 }
 
 const nextStatusMap: Record<OrderStatus, OrderStatus | null> = {
@@ -90,8 +91,9 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
     }
 
     if (confirm(`Are you sure you want to cancel Order #${order.id.slice(0, 6)}?`)) {
-      // Optimistic UI update
-      onStatusUpdated?.(order.id, 'cancelled');
+      // Optimistic UI update & local tracking
+      markOrderCancelledByStaff(order.id);
+      onStatusUpdated?.(order.id, 'cancelled', 'staff');
       toast.info('Order cancelled');
 
       const success = await updateOrderStatus(order.id, 'cancelled', 'staff');
@@ -111,6 +113,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
     if (minutes < 30) return `${timeFormatted} (${minutes}m)`;
     return timeFormatted;
   };
+
+  const cancellationSource = order.status === 'cancelled'
+    ? getOrderCancellationSource(order.id, order.cancelled_by)
+    : 'unknown';
 
   return (
     <div
@@ -187,12 +193,14 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
           {order.status === 'cancelled' && (
             <span
               className={`text-[10px] font-bold italic block ${
-                order.cancelled_by?.toLowerCase() === 'staff' ? 'text-amber-400' : 'text-red-400'
+                cancellationSource === 'customer'
+                  ? 'text-red-400'
+                  : 'text-amber-400'
               }`}
             >
-              {order.cancelled_by?.toLowerCase() === 'staff'
-                ? 'Cancelled by Staff'
-                : 'Cancelled by Customer'}
+              {cancellationSource === 'customer'
+                ? 'Cancelled by Customer'
+                : 'Cancelled by Staff'}
             </span>
           )}
         </div>

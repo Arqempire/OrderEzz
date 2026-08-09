@@ -10,7 +10,7 @@ interface KanbanColumnProps {
   title: string;
   status: OrderStatus;
   orders: Order[];
-  onOrderUpdated?: (orderId?: string, newStatus?: OrderStatus) => void;
+  onOrderUpdated?: (orderId?: string, newStatus?: OrderStatus, cancelledBy?: string) => void;
 }
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({

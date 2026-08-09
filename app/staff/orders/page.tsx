@@ -7,7 +7,7 @@ import { KanbanColumn } from '@/components/staff/kanban-column';
 import { StaffLogoutButton } from '@/components/staff/staff-logout-button';
 import { TableRequestsPanel } from '@/components/staff/table-requests-panel';
 import { createClient } from '@/lib/supabase/client';
-import { UtensilsCrossed, RefreshCw, LogOut, MessageSquare } from 'lucide-react';
+import { UtensilsCrossed, RefreshCw, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 
 import { toast } from 'sonner';
@@ -30,10 +30,21 @@ export default function StaffOrdersDashboard() {
   }, []);
 
   const handleOrderUpdated = useCallback(
-    (orderId?: string, newStatus?: Order['status']) => {
+    (orderId?: string, newStatus?: Order['status'], cancelledBy?: string) => {
       if (orderId && newStatus) {
         setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+          prev.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  status: newStatus,
+                  cancelled_by:
+                    cancelledBy ??
+                    o.cancelled_by ??
+                    (newStatus === 'cancelled' ? 'staff' : undefined),
+                }
+              : o
+          )
         );
       } else {
         loadOrders();

@@ -7,6 +7,7 @@ import { OrderStatusBadge } from '@/components/ui/badge';
 import { CheckCircle2, Clock, Utensils, Sparkles, CheckCheck, RefreshCw, PlusCircle, Radio, XCircle } from 'lucide-react';
 import { fetchOrderDetailsById, cancelCustomerOrder } from '@/lib/queries/orders';
 import { getActiveOrderIdsForTable, removeOrderFromLocalStorage } from '@/lib/utils/order-session';
+import { markOrderCancelledByCustomer } from '@/lib/utils/order-cancellation';
 import { ThankYouFeedbackCard } from '@/components/order/thank-you-feedback-card';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -127,7 +128,8 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
       if (tableQrToken) {
         removeOrderFromLocalStorage(tableQrToken, order.id);
       }
-      setOrder((prev) => ({ ...prev, status: 'cancelled' }));
+      markOrderCancelledByCustomer(order.id);
+      setOrder((prev) => ({ ...prev, status: 'cancelled', cancelled_by: 'customer' }));
       syncSessionOrders();
     } else {
       toast.error(result.error || 'Failed to cancel order.');

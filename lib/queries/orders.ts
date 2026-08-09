@@ -109,22 +109,64 @@ export async function fetchAllActiveOrders(): Promise<Order[]> {
 
 /**
  * Advances or updates an order's status (Staff action).
+ * Calls server API route first; if that fails, falls back to RPC and direct client update.
  */
 export async function updateOrderStatus(
   orderId: string,
   newStatus: OrderStatus,
   cancelledBy?: 'customer' | 'staff'
 ): Promise<boolean> {
+  // 1. Try server API route first (uses staff auth session + admin fallback)
+  try {
+    const response = await fetch('/api/staff/orders/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, newStatus, cancelledBy }),
+    });
+
+    const resData = await response.json();
+    if (response.ok && resData.success) {
+      return true;
+    }
+    console.warn('API route update-status failed, trying direct RPC/client update:', resData?.error);
+  } catch (apiErr) {
+    console.warn('Network error calling update-status API route:', apiErr);
+  }
+
+  // 2. Fallback: direct browser Supabase client (RPC or table update)
   const supabase = createClient();
+  try {
+    const { data: rpcSuccess, error: rpcErr } = await supabase.rpc('update_order_status', {
+      p_order_id: orderId,
+      p_new_status: newStatus,
+      p_cancelled_by: newStatus === 'cancelled' ? (cancelledBy || 'staff') : null,
+    });
+
+    if (!rpcErr && rpcSuccess !== false) {
+      return true;
+    }
+  } catch (rpcErr) {
+    console.warn('Direct RPC update_order_status failed, falling back to direct table update:', rpcErr);
+  }
+
+  // 3. Fallback: direct table update
   const payload: { status: OrderStatus; cancelled_by?: string } = { status: newStatus };
   if (newStatus === 'cancelled') {
     payload.cancelled_by = cancelledBy || 'staff';
   }
 
-  const { error } = await supabase
+  let { error } = await supabase
     .from('orders')
     .update(payload)
     .eq('id', orderId);
+
+  if (error && payload.cancelled_by && (error.code === 'PGRST204' || error.message?.includes('cancelled_by'))) {
+    const { error: fallbackError } = await supabase
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', orderId);
+    error = fallbackError;
+  }
 
   if (error) {
     console.error('Error updating order status:', error);
@@ -136,16 +178,36 @@ export async function updateOrderStatus(
 
 /**
  * Cancels a customer order securely via RPC if status is still 'received'.
+ * Explicitly ensures cancelled_by is recorded as 'customer'.
  */
 export async function cancelCustomerOrder(orderId: string): Promise<{ success: boolean; error?: string }> {
   const supabase = createClient();
-  const { error } = await supabase.rpc('cancel_customer_order', {
+  let { error } = await supabase.rpc('cancel_customer_order', {
     p_order_id: orderId,
   });
 
   if (error) {
-    console.error('Error cancelling customer order:', error);
-    return { success: false, error: error.message || 'Failed to cancel order' };
+    console.warn('RPC cancel_customer_order failed, trying direct table update:', error.message);
+    const { error: directError } = await supabase
+      .from('orders')
+      .update({ status: 'cancelled', cancelled_by: 'customer' })
+      .eq('id', orderId)
+      .eq('status', 'received');
+
+    if (directError) {
+      console.error('Error cancelling customer order via direct update:', directError);
+      return { success: false, error: directError.message || 'Failed to cancel order' };
+    }
+  } else {
+    // Explicitly update cancelled_by to 'customer' to guarantee attribution
+    try {
+      await supabase
+        .from('orders')
+        .update({ cancelled_by: 'customer' })
+        .eq('id', orderId);
+    } catch (updateErr) {
+      console.warn('Notice: could not set cancelled_by to customer:', updateErr);
+    }
   }
 
   return { success: true };
