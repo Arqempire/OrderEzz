@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
       <body className="bg-slate-950 text-slate-100 antialiased selection:bg-amber-500 selection:text-slate-950 flex flex-col min-h-screen">
         <div className="flex-1">{children}</div>
-        <footer className="py-3 px-4 text-center text-[11px] font-medium text-slate-400/70 select-none bg-slate-950/80 border-t border-slate-900/60 z-20">
+        <footer className="py-3 px-4 text-center text-[11px] font-medium text-slate-400/70 select-none bg-slate-950 border-t border-slate-900/60 relative z-0">
           Powered by <span className="text-amber-400 font-bold font-display">OrderEzz</span> a <span className="text-slate-300 font-semibold">ARQ technologies</span> product
         </footer>
         <Toaster position="top-center" theme="dark" richColors />

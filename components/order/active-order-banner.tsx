@@ -106,7 +106,7 @@ export const ActiveOrderBanner: React.FC<ActiveOrderBannerProps> = ({
 
   return (
     <div
-      className={`fixed ${bottomPosition} left-4 right-4 max-w-[448px] mx-auto z-35 bg-slate-900/95 backdrop-blur-xl rounded-2xl p-3.5 border border-amber-500/30 shadow-2xl transition-all duration-300 animate-slide-up`}
+      className={`fixed ${bottomPosition} left-4 right-4 max-w-[448px] mx-auto z-50 bg-slate-900/95 backdrop-blur-xl rounded-2xl p-3.5 border border-amber-500/30 shadow-2xl transition-all duration-300 animate-slide-up`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
