@@ -228,6 +228,10 @@ export default function CashierPanelPage() {
   };
 
   const renderCancelledByBadge = (order: Order) => {
+    if (order.status !== 'cancelled') {
+      return <OrderStatusBadge status={order.status} className="!py-0.5 text-[9px]" />;
+    }
+
     const by = order.cancelled_by?.toLowerCase();
     if (by === 'staff') {
       return (
