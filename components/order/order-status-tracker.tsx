@@ -181,6 +181,13 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
           {statusSteps.find((s) => s.key === order.status)?.desc || 'Status updated'}
         </p>
 
+        {order.created_at && (
+          <p className="text-[11px] text-amber-400/90 font-mono mt-2 flex items-center justify-center gap-1">
+            <Clock size={12} />
+            <span>Placed: {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </p>
+        )}
+
         {/* Customer Cancel Order Action (Allowed only when status === 'received') */}
         {order.status === 'received' && (
           <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">

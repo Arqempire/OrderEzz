@@ -220,11 +220,14 @@ export default function CashierPanelPage() {
     });
   };
 
-  const timeAgo = (dateStr: string) => {
-    const minutes = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 60000);
-    if (minutes < 1) return 'Just now';
-    if (minutes === 1) return '1 min ago';
-    return `${minutes} mins ago`;
+  const formatOrderTime = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const timeFormatted = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
+    if (minutes < 1) return `${timeFormatted} (now)`;
+    if (minutes < 30) return `${timeFormatted} (${minutes}m)`;
+    return timeFormatted;
   };
 
   const renderCancelledByBadge = (order: Order) => {
@@ -427,7 +430,7 @@ export default function CashierPanelPage() {
                             <div className="flex items-center gap-1.5 font-mono text-slate-400">
                               <span>#{order.id.slice(0, 6)}</span>
                               <span>•</span>
-                              <span className="text-[11px] text-slate-400">{timeAgo(order.created_at)}</span>
+                              <span className="text-[11px] text-slate-400">{formatOrderTime(order.created_at)}</span>
                             </div>
                             {renderCancelledByBadge(order)}
                           </div>
@@ -715,7 +718,7 @@ export default function CashierPanelPage() {
                         <div className="flex items-center gap-3">
                           <span className="text-xs text-slate-400 flex items-center gap-1 font-mono">
                             <Clock size={12} />
-                            {timeAgo(order.updated_at || order.created_at)}
+                            {formatOrderTime(order.created_at)}
                           </span>
                           {renderCancelledByBadge(order)}
                         </div>

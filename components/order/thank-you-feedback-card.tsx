@@ -192,7 +192,14 @@ export const ThankYouFeedbackCard: React.FC<ThankYouFeedbackCardProps> = ({ orde
       {/* Settled Receipt Summary */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
         <h3 className="text-sm font-bold text-slate-200 font-display border-b border-slate-800 pb-3 flex items-center justify-between">
-          <span>Settled Order Receipt</span>
+          <div className="flex flex-col">
+            <span>Settled Order Receipt</span>
+            {order.created_at && (
+              <span className="text-[10px] text-slate-400 font-normal font-mono" suppressHydrationWarning>
+                Placed: {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
           <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
             Paid & Closed
           </span>

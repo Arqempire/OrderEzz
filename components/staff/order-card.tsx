@@ -84,12 +84,12 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
   };
 
   const handleCancelOrder = async () => {
-    if (order.status === 'served') {
-      toast.error('Served orders cannot be cancelled.');
+    if (order.status === 'served' || order.status === 'paid') {
+      toast.error('Served or completed orders cannot be cancelled.');
       return;
     }
 
-    if (confirm('Are you sure you want to cancel this order?')) {
+    if (confirm(`Are you sure you want to cancel Order #${order.id.slice(0, 6)}?`)) {
       // Optimistic UI update
       onStatusUpdated?.(order.id, 'cancelled');
       toast.info('Order cancelled');
@@ -102,28 +102,36 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
     }
   };
 
-  const timeAgo = (dateStr: string) => {
-    const minutes = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 60000);
-    if (minutes < 1) return 'Just now';
-    if (minutes === 1) return '1 min ago';
-    return `${minutes} mins ago`;
+  const formatOrderTime = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const timeFormatted = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
+    if (minutes < 1) return `${timeFormatted} (now)`;
+    if (minutes < 30) return `${timeFormatted} (${minutes}m)`;
+    return timeFormatted;
   };
 
   return (
     <div
-      className={`kanban-card group transition-all duration-300 ${isCollapsing ? 'opacity-0 scale-95 max-h-0 overflow-hidden py-0 my-0 border-none' : ''
-        }`}
+      className={`kanban-card group transition-all duration-300 ${
+        isCollapsing ? 'opacity-0 scale-95 max-h-0 overflow-hidden py-0 my-0 border-none' : ''
+      }`}
     >
-      {/* Top Header: Table Number, Time & Cancel Action */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800 gap-1.5 min-w-0 w-full">
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+      {/* Top Header: Table Number, Order ID, Time & Cancel Action */}
+      <div className="flex items-center justify-between pb-2 border-b border-slate-800 gap-2 w-full">
+        {/* Left Side: Table Badge & Order ID (ALWAYS 100% VISIBLE) */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <span className="bg-amber-500 text-slate-950 font-extrabold text-xs px-2 py-0.5 rounded-lg font-display flex-shrink-0">
             Table {order.table?.table_number ?? '?'}
           </span>
-          <span className="text-[10px] text-slate-400 font-mono truncate">#{order.id.slice(0, 6)}</span>
+          <span className="text-[11px] text-slate-300 font-mono font-bold flex-shrink-0">
+            #{order.id.slice(0, 6)}
+          </span>
         </div>
 
-        <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Right Side: Status / Time / Cancel Button */}
+        <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto text-right">
           {order.status === 'cancelled' ? (
             <span
               className={`border text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
@@ -149,25 +157,28 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
                 ? 'Cancelled by Staff'
                 : 'Cancelled'}
             </span>
-          ) : order.status === 'served' ? (
+          ) : order.status === 'served' && countdown > 0 ? (
             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               Clearing {countdown}s
             </span>
           ) : (
-            <>
-              <div className="flex items-center gap-0.5 text-[10px] text-slate-400">
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-0.5 text-[10px] text-slate-400 font-mono">
                 <Clock size={11} />
-                {timeAgo(order.created_at)}
+                <span>{formatOrderTime(order.created_at)}</span>
               </div>
-              <button
-                onClick={handleCancelOrder}
-                className="text-slate-500 hover:text-red-400 p-0.5 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer flex-shrink-0"
-                title="Cancel Order"
-              >
-                <XCircle size={14} />
-              </button>
-            </>
+              {/* Cancel Button ONLY shown for active non-served orders */}
+              {order.status !== 'served' && order.status !== 'paid' && (
+                <button
+                  onClick={handleCancelOrder}
+                  className="text-slate-500 hover:text-red-400 p-0.5 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer flex-shrink-0"
+                  title="Cancel Order"
+                >
+                  <XCircle size={14} />
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

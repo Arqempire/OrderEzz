@@ -94,6 +94,16 @@ export const ActiveOrderBanner: React.FC<ActiveOrderBannerProps> = ({
   // Stack above sticky cart bar (bottom-24) if cart has items, else bottom-4
   const bottomPosition = hasCartItems ? 'bottom-24' : 'bottom-4';
 
+  const formatOrderTime = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const timeFormatted = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
+    if (minutes < 1) return `${timeFormatted} (Just now)`;
+    if (minutes === 1) return `${timeFormatted} (1m ago)`;
+    return `${timeFormatted} (${minutes}m ago)`;
+  };
+
   return (
     <div
       className={`fixed ${bottomPosition} left-4 right-4 max-w-[448px] mx-auto z-35 bg-slate-900/95 backdrop-blur-xl rounded-2xl p-3.5 border border-amber-500/30 shadow-2xl transition-all duration-300 animate-slide-up`}
@@ -115,10 +125,13 @@ export const ActiveOrderBanner: React.FC<ActiveOrderBannerProps> = ({
               {activeOrders.length > 1 ? (
                 <>
                   <span className="text-amber-400 font-bold">Table Total: ₹{combinedTotal.toFixed(2)}</span>
-                  <span className="text-slate-400 font-normal ml-1">({activeOrders.length} orders)</span>
+                  <span className="text-slate-400 font-normal ml-1">• Placed {formatOrderTime(currentOrder.created_at)}</span>
                 </>
               ) : (
-                `Total: ₹${currentOrder.total.toFixed(2)}`
+                <>
+                  <span>Total: ₹{currentOrder.total.toFixed(2)}</span>
+                  <span className="text-slate-400 font-normal ml-1">• Placed {formatOrderTime(currentOrder.created_at)}</span>
+                </>
               )}
             </p>
           </div>
