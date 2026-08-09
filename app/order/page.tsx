@@ -13,7 +13,7 @@ import { ActiveOrderBanner } from '@/components/order/active-order-banner';
 import { TableRequestButtons } from '@/components/order/table-request-buttons';
 import { useCartStore } from '@/lib/store/cart-store';
 import { createClient } from '@/lib/supabase/client';
-import { Search, UtensilsCrossed, AlertTriangle, Loader2 } from 'lucide-react';
+import { Search, UtensilsCrossed, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 function CustomerOrderContent() {
@@ -61,32 +61,48 @@ function CustomerOrderContent() {
         return;
       }
 
-      // Resolve table via security definer RPC
-      const resolved = await resolveTableFromQrToken(token);
+      try {
+        const FETCH_TIMEOUT_MS = 15000;
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error('Connection is slow or unstable. Please check your internet and try again.')
+              ),
+            FETCH_TIMEOUT_MS
+          )
+        );
 
-      if (!resolved || !resolved.is_active) {
-        setInvalidError('This table QR code is invalid or inactive. Please ask a server for assistance.');
+        const dataPromise = Promise.all([
+          resolveTableFromQrToken(token),
+          fetchMenuCategories(),
+          fetchMenuItems(),
+        ]);
+
+        const [resolved, fetchedCategories, fetchedItems] = await Promise.race([
+          dataPromise,
+          timeoutPromise,
+        ]);
+
+        if (!resolved || !resolved.is_active) {
+          setInvalidError('This table QR code is invalid or inactive. Please ask a server for assistance.');
+          return;
+        }
+
+        setLocalTableId(resolved.table_id);
+        setTableId(resolved.table_id);
+        setCategories(fetchedCategories);
+        setMenuItems(fetchedItems);
+
+        if (fetchedCategories.length > 0) {
+          setSelectedCategoryId(fetchedCategories[0].id);
+        }
+      } catch (err: any) {
+        console.error('Error loading menu session:', err);
+        setInvalidError(err.message || 'Failed to load menu. Please check your connection and try again.');
+      } finally {
         setIsValidatingToken(false);
-        return;
       }
-
-      setLocalTableId(resolved.table_id);
-      setTableId(resolved.table_id);
-
-      // Load Menu Categories & Items
-      const [fetchedCategories, fetchedItems] = await Promise.all([
-        fetchMenuCategories(),
-        fetchMenuItems(),
-      ]);
-
-      setCategories(fetchedCategories);
-      setMenuItems(fetchedItems);
-
-      if (fetchedCategories.length > 0) {
-        setSelectedCategoryId(fetchedCategories[0].id);
-      }
-
-      setIsValidatingToken(false);
     }
 
     initSession();
@@ -120,8 +136,8 @@ function CustomerOrderContent() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center text-slate-100">
         <Loader2 size={36} className="text-amber-400 animate-spin mb-4" />
-        <h2 className="text-lg font-bold font-display">Resolving Table Session...</h2>
-        <p className="text-xs text-slate-400 mt-1">Connecting to kitchen menu</p>
+        <h2 className="text-lg font-bold font-display">Connecting to your table...</h2>
+        <p className="text-xs text-slate-400 mt-1">Loading kitchen menu</p>
       </div>
     );
   }
@@ -132,8 +148,14 @@ function CustomerOrderContent() {
         <div className="w-16 h-16 rounded-3xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mb-4">
           <AlertTriangle size={32} />
         </div>
-        <h2 className="text-xl font-bold font-display text-slate-100">Invalid Table Token</h2>
-        <p className="text-xs text-slate-400 mt-2 leading-relaxed">{invalidError}</p>
+        <h2 className="text-xl font-bold font-display text-slate-100">Unable to Load Menu</h2>
+        <p className="text-xs text-slate-400 mt-2 leading-relaxed">{invalidError || 'Table session could not be established.'}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md shadow-amber-500/20 active:scale-95 cursor-pointer flex items-center gap-1.5"
+        >
+          <RefreshCw size={14} /> Try Again
+        </button>
       </div>
     );
   }

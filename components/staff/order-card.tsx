@@ -132,32 +132,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
 
         {/* Right Side: Status / Time / Cancel Button */}
         <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto text-right">
-          {order.status === 'cancelled' ? (
-            <span
-              className={`border text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                order.cancelled_by === 'customer'
-                  ? 'bg-red-500/15 text-red-400 border-red-500/30'
-                  : order.cancelled_by === 'staff'
-                  ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                  : 'bg-red-500/10 text-red-400 border-red-500/30'
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  order.cancelled_by === 'customer'
-                    ? 'bg-red-400 animate-pulse'
-                    : order.cancelled_by === 'staff'
-                    ? 'bg-amber-400'
-                    : 'bg-red-400'
-                }`}
-              />
-              {order.cancelled_by === 'customer'
-                ? 'Cancelled by Customer'
-                : order.cancelled_by === 'staff'
-                ? 'Cancelled by Staff'
-                : 'Cancelled'}
-            </span>
-          ) : order.status === 'served' && countdown > 0 ? (
+          {order.status === 'served' && countdown > 0 ? (
             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               Clearing {countdown}s
@@ -168,8 +143,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
                 <Clock size={11} />
                 <span>{formatOrderTime(order.created_at)}</span>
               </div>
-              {/* Cancel Button ONLY shown for active non-served orders */}
-              {order.status !== 'served' && order.status !== 'paid' && (
+              {/* Cancel Button ONLY shown for active non-served/non-cancelled orders */}
+              {order.status !== 'served' && order.status !== 'paid' && order.status !== 'cancelled' && (
                 <button
                   onClick={handleCancelOrder}
                   className="text-slate-500 hover:text-red-400 p-0.5 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer flex-shrink-0"
@@ -212,14 +187,12 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
           {order.status === 'cancelled' && (
             <span
               className={`text-[10px] font-bold italic block ${
-                order.cancelled_by === 'customer' ? 'text-red-400' : 'text-amber-400'
+                order.cancelled_by?.toLowerCase() === 'staff' ? 'text-amber-400' : 'text-red-400'
               }`}
             >
-              {order.cancelled_by === 'customer'
-                ? 'Cancelled by Customer'
-                : order.cancelled_by === 'staff'
+              {order.cancelled_by?.toLowerCase() === 'staff'
                 ? 'Cancelled by Staff'
-                : 'Cancelled order'}
+                : 'Cancelled by Customer'}
             </span>
           )}
         </div>

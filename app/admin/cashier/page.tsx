@@ -432,7 +432,7 @@ export default function CashierPanelPage() {
                               <span>•</span>
                               <span className="text-[11px] text-slate-400">{formatOrderTime(order.created_at)}</span>
                             </div>
-                            {renderCancelledByBadge(order)}
+                            {order.status !== 'cancelled' && <OrderStatusBadge status={order.status} className="!py-0.5 text-[9px]" />}
                           </div>
 
                           {/* Sub-order Items */}
