@@ -16,6 +16,7 @@ import {
   Clock,
   BarChart3,
   Utensils,
+  UtensilsCrossed,
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -100,7 +101,7 @@ export default function AdminFeedbackPage() {
             href="/staff/orders"
             className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5"
           >
-            <ArrowLeft size={14} /> Staff Dashboard
+            <UtensilsCrossed size={14} /> Staff Dashboard
           </Link>
           <AdminLogoutButton />
         </div>

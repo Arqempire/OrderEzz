@@ -17,6 +17,7 @@ import {
   RefreshCw,
   ArrowLeft,
   Utensils,
+  UtensilsCrossed,
   AlertCircle,
   PieChart as PieIcon,
   CheckCircle2,
@@ -245,7 +246,7 @@ export default function AdminAnalyticsPage() {
             href="/staff/orders"
             className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5 flex-shrink-0"
           >
-            <ArrowLeft size={14} /> Staff Dashboard
+            <UtensilsCrossed size={14} /> Staff Dashboard
           </Link>
 
           <div className="flex-shrink-0">

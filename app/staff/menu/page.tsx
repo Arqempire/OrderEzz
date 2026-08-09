@@ -93,7 +93,7 @@ export default function StaffMenuAvailabilityPage() {
             href="/staff/orders"
             className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5"
           >
-            <ArrowLeft size={16} /> Back to Kanban
+            <UtensilsCrossed size={16} /> Staff Dashboard
           </Link>
         </div>
       </header>

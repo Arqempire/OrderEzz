@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, Suspense } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { resolveTableFromQrToken } from '@/lib/queries/tables';
 import { fetchMenuCategories, fetchMenuItems } from '@/lib/queries/menu';
@@ -13,7 +13,7 @@ import { ActiveOrderBanner } from '@/components/order/active-order-banner';
 import { TableRequestButtons } from '@/components/order/table-request-buttons';
 import { useCartStore } from '@/lib/store/cart-store';
 import { createClient } from '@/lib/supabase/client';
-import { Search, UtensilsCrossed, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
+import { Search, UtensilsCrossed, AlertTriangle, Loader2, RefreshCw, LayoutGrid, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 function CustomerOrderContent() {
@@ -31,6 +31,17 @@ function CustomerOrderContent() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Compute category item counts for sidebar badges (Top-level hook to satisfy React Rules of Hooks)
+  const categoryItemCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    menuItems.forEach((item) => {
+      if (item.category_id) {
+        counts[item.category_id] = (counts[item.category_id] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [menuItems]);
 
   // Helper function to reload fresh menu items and notify if an item went out of stock
   const reloadMenuItems = useCallback(async () => {
@@ -177,7 +188,7 @@ function CustomerOrderContent() {
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-28">
       {/* Top Banner Header */}
       <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 px-4 py-2.5">
-        <div className="max-w-lg mx-auto flex items-center justify-between gap-2.5">
+        <div className="max-w-lg mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-shrink-0">
             <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
               <UtensilsCrossed size={16} />
@@ -190,20 +201,33 @@ function CustomerOrderContent() {
             </div>
           </div>
 
-          <div className="relative flex-1 max-w-[160px] sm:max-w-[200px]">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search dishes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-7 pr-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
-            />
+          <div className="flex items-center gap-2 flex-1 justify-end">
+            {/* Header Category Dropdown Menu */}
+            {categories.length > 0 && (
+              <CategoryNav
+                categories={categories}
+                activeCategoryId={selectedCategoryId}
+                onSelectCategory={(id) => setSelectedCategoryId(id)}
+                categoryItemCounts={categoryItemCounts}
+              />
+            )}
+
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-[140px] sm:max-w-[180px]">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search dishes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-7 pr-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
+              />
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      <main className="max-w-lg mx-auto px-3 sm:px-4 py-4 space-y-4">
         {/* Table Quick Actions Bar ('Call Waiter' & 'Request Water') */}
         {tableId && (
           <div className="flex items-center justify-between bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl px-3.5 py-2">
@@ -212,16 +236,22 @@ function CustomerOrderContent() {
           </div>
         )}
 
-        {/* Category Navigation Bar (when not searching) */}
-        {!searchQuery && categories.length > 0 && (
-          <CategoryNav
-            categories={categories}
-            activeCategoryId={selectedCategoryId}
-            onSelectCategory={(id) => setSelectedCategoryId(id)}
-          />
+        {/* Selected Category Active Filter Chip */}
+        {selectedCategoryId && !searchQuery && (
+          <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 rounded-xl px-3.5 py-2 text-xs">
+            <span className="text-amber-400 font-bold flex items-center gap-1.5">
+              Category: {categories.find((c) => c.id === selectedCategoryId)?.name || 'Filtered'}
+            </span>
+            <button
+              onClick={() => setSelectedCategoryId(null)}
+              className="text-slate-400 hover:text-amber-400 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+            >
+              Show All Dishes <X size={12} />
+            </button>
+          </div>
         )}
 
-        {/* Menu Items List */}
+        {/* Food Items List */}
         <section className="space-y-3">
           {filteredItems.length > 0 ? (
             filteredItems.map((item) => <MenuCard key={item.id} item={item} />)

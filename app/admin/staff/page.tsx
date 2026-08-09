@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { StaffUser, StaffRole } from '@/lib/types/database.types';
 import { fetchAllStaffUsers } from '@/lib/queries/staff';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Users, Mail, Lock, User, Shield, RefreshCw, ArrowLeft, KeyRound, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { UserPlus, Users, Mail, Lock, User, Shield, RefreshCw, ArrowLeft, UtensilsCrossed, KeyRound, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { AdminLogoutButton } from '@/components/admin/admin-logout-button';
@@ -128,7 +128,7 @@ export default function AdminStaffPage() {
             href="/staff/orders"
             className="bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-800 transition-colors flex items-center gap-1.5"
           >
-            <ArrowLeft size={14} /> Staff Dashboard
+            <UtensilsCrossed size={14} /> Staff Dashboard
           </Link>
           <AdminLogoutButton />
         </div>
