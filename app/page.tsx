@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { QrCode, LayoutDashboard, Settings, UtensilsCrossed, ArrowRight, BarChart3, MessageSquare, ChefHat } from 'lucide-react';
 import { fetchAllTables } from '@/lib/queries/tables';
 
+
 export const revalidate = 0;
 
 export default async function Home() {

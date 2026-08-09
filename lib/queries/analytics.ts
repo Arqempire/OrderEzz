@@ -49,7 +49,7 @@ export async function fetchAnalyticsData(
   startDate: string,
   endDate: string
 ): Promise<AnalyticsDataPayload> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const warnings: string[] = [];
 
   // Execute all 7 analytics queries in PARALLEL to eliminate sequential network latency

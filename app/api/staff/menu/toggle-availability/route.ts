@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // 1. Try updating with server client (uses staff auth session cookies)
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase
       .from('menu_items')
       .update({ is_available: isAvailable })

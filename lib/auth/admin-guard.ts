@@ -15,7 +15,7 @@ export interface AdminAuthResult {
  */
 export async function verifyAdminSession(request: Request): Promise<AdminAuthResult> {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     let { data: { user }, error: authError } = await supabase.auth.getUser();
 
     // If cookie user is null, fallback to checking Authorization Bearer token header

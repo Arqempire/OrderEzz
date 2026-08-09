@@ -19,7 +19,7 @@ export interface StaffAuthResult {
  */
 export async function verifyStaffSession(request: Request): Promise<StaffAuthResult> {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {

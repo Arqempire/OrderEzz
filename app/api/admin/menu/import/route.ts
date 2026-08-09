@@ -181,7 +181,7 @@ No markdown formatting, no code block wrapping, ONLY raw valid JSON array.`,
     }
 
     // Initialize Supabase Server Client
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // 1. Create menu_import_batches entry
     const { data: batchData, error: batchError } = await supabase
