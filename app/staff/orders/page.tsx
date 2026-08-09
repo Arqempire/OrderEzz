@@ -172,7 +172,6 @@ export default function StaffOrdersDashboard() {
           status="cancelled"
           orders={getOrdersByStatus('cancelled')}
           onOrderUpdated={handleOrderUpdated}
-          onClearAll={handleClearAllCancelled}
         />
       </div>
     </main>

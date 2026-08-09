@@ -197,16 +197,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
           )}
         </div>
 
-        {order.status === 'cancelled' ? (
-          <button
-            onClick={handleDismissOrder}
-            className="text-xs font-bold text-slate-300 hover:text-red-400 bg-slate-800 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/30 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0 shadow-sm"
-            title="Clear this cancelled order from dashboard"
-          >
-            <Trash2 size={13} />
-            Clear
-          </button>
-        ) : order.status === 'served' ? (
+        {order.status === 'cancelled' ? null : order.status === 'served' ? (
           <button
             onClick={handleDismissOrder}
             className="text-xs font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer flex-shrink-0"
