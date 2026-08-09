@@ -3,7 +3,7 @@ import { fetchAnalyticsData, getDateRangeBounds } from '@/lib/queries/analytics'
 import { verifyAdminSession } from '@/lib/auth/admin-guard';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 export async function GET(request: Request) {
   // 1. Server-side auth & role verification
