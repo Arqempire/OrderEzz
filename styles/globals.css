@@ -158,8 +158,9 @@ body {
     margin: 10mm;
   }
 
-  /* Hide background dashboard UI: headers, navs, forms, buttons, cards */
+  /* Hide background dashboard UI: headers, footers, navs, forms, buttons, cards */
   header,
+  footer,
   nav,
   aside,
   form,

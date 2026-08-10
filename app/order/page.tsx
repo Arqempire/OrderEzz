@@ -215,7 +215,7 @@ function CustomerOrderContent() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-28">
+    <div className="flex-1 bg-slate-950 text-slate-100 pb-20">
       {/* Top Banner Header */}
       <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 px-4 py-2.5">
         <div className="max-w-lg mx-auto flex items-center justify-between gap-2">

@@ -1,8 +1,7 @@
-'use client';
-
 import React, { useEffect } from 'react';
 import { Order } from '@/lib/types/database.types';
-import { X, Printer, Download, CheckCircle2, UtensilsCrossed } from 'lucide-react';
+import { X, Printer, Download } from 'lucide-react';
+import { extractGuestInfoFromOrder } from '@/lib/utils/guest-info';
 
 interface CustomerBillReceiptModalProps {
   order: Order;
@@ -34,26 +33,19 @@ export const CustomerBillReceiptModal: React.FC<CustomerBillReceiptModalProps> =
     window.print();
   };
 
+  const guestInfo = extractGuestInfoFromOrder(order);
   const tableNum = order.table?.table_number ?? '?';
-  const orderDate = order.created_at
-    ? new Date(order.created_at).toLocaleDateString([], {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      }) +
-      ' ' +
-      new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    : new Date().toLocaleTimeString();
+  const isTakeaway = tableNum === 0 || tableNum === '0' || tableNum === 'Takeaway';
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in print:p-0 print:bg-white">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in print:p-0 print:bg-white print-receipt-modal">
       {/* Backdrop Click */}
       <div className="absolute inset-0 print:hidden" onClick={onClose} />
 
       {/* Dialog Card */}
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh] print:max-w-none print:w-full print:border-none print:shadow-none print:rounded-none print:bg-white print:text-black">
+      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh] print:max-w-none print:w-full print:border-none print:shadow-none print:rounded-none print:bg-white print:text-black print-dialog-box p-5 space-y-4">
         {/* Top Control Header */}
-        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between print:hidden">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800 print:hidden">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-200 font-display">
             <Printer size={16} className="text-amber-400" /> Customer Bill Receipt
           </div>
@@ -73,93 +65,63 @@ export const CustomerBillReceiptModal: React.FC<CustomerBillReceiptModalProps> =
           </div>
         </div>
 
-        {/* Printable Receipt Content */}
-        <div className="p-6 overflow-y-auto space-y-6 text-slate-100 print:text-black print:p-0 print:overflow-visible">
-          {/* Receipt Header Branding */}
-          <div className="text-center border-b border-slate-800/80 pb-4 print:border-black">
-            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-500 text-slate-950 font-bold mb-2 print:hidden">
-              <UtensilsCrossed size={20} />
-            </div>
-            <h2 className="text-xl font-extrabold font-display uppercase tracking-wider text-slate-100 print:text-black">
-              OrderEzz Restaurant
+        {/* Thermal POS Receipt Preview (Matching Cashier Panel POS Print Format) */}
+        <div
+          id="printable-receipt-area"
+          className="bg-white text-slate-900 p-6 rounded-2xl shadow-inner font-mono text-xs space-y-4 border border-slate-200 overflow-y-auto max-h-[70vh] print:max-h-none print:p-0 print:shadow-none print:border-none"
+        >
+          {/* Header */}
+          <div className="text-center space-y-1 pb-3 border-b border-dashed border-slate-400">
+            <h2 className="font-black text-base font-display tracking-tight text-slate-950">
+              ORDEREZZ RESTAURANT
             </h2>
-            <p className="text-[11px] text-slate-400 font-mono mt-0.5 print:text-black">
-              Tax Invoice & Dine-In Settled Receipt
+            <p className="text-[10px] text-slate-600">Fine Dining & Express QR Ordering</p>
+            <p className="text-[10px] text-slate-500 mt-1" suppressHydrationWarning>
+              Date: {order.created_at ? new Date(order.created_at).toLocaleDateString() + ' ' + new Date(order.created_at).toLocaleTimeString() : new Date().toLocaleTimeString()}
             </p>
-          </div>
-
-          {/* Table & Order Metadata */}
-          <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-3.5 text-xs font-mono space-y-1.5 print:bg-white print:border-black print:text-black">
-            <div className="flex justify-between">
-              <span className="text-slate-400 print:text-black">Table:</span>
-              <span className="font-bold text-amber-400 print:text-black">TABLE {tableNum}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400 print:text-black">Order ID:</span>
-              <span className="font-bold text-slate-200 print:text-black">#{order.id.slice(0, 8)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400 print:text-black">Date & Time:</span>
-              <span className="text-slate-300 print:text-black">{orderDate}</span>
-            </div>
-            <div className="flex justify-between pt-1 border-t border-slate-800/60 print:border-black">
-              <span className="text-slate-400 print:text-black">Payment Status:</span>
-              <span className="font-bold text-emerald-400 print:text-black flex items-center gap-1">
-                <CheckCircle2 size={12} /> PAID & SETTLED
-              </span>
-            </div>
-          </div>
-
-          {/* Itemized Dishes List */}
-          <div className="space-y-2">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono border-b border-slate-800 pb-1.5 flex justify-between print:text-black print:border-black">
-              <span>Item & Quantity</span>
-              <span>Subtotal</span>
-            </div>
-
-            <div className="divide-y divide-slate-800/50 print:divide-black">
-              {order.order_items?.map((item) => (
-                <div key={item.id} className="py-2 flex justify-between items-start text-xs">
-                  <div>
-                    <div className="font-bold text-slate-200 print:text-black">
-                      <span className="text-amber-400 font-extrabold mr-1.5 print:text-black">
-                        {item.quantity}x
-                      </span>
-                      {item.menu_item?.name || 'Dish'}
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono print:text-black">
-                      ₹{item.price_at_order.toFixed(2)} each
-                    </div>
-                    {item.notes && (
-                      <div className="text-[10px] text-slate-400 italic mt-0.5 print:text-black">
-                        Note: {item.notes}
-                      </div>
-                    )}
-                  </div>
-                  <span className="font-extrabold text-slate-100 font-mono print:text-black">
-                    ₹{(item.price_at_order * item.quantity).toFixed(2)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Grand Total */}
-          <div className="pt-3 border-t-2 border-slate-800 flex justify-between items-center text-base print:border-black print:text-black">
-            <span className="font-bold text-slate-300 font-display print:text-black">
-              TOTAL AMOUNT PAID
-            </span>
-            <span className="text-xl font-black text-amber-400 font-display print:text-black">
-              ₹{order.total.toFixed(2)}
-            </span>
-          </div>
-
-          {/* Footer Receipt Note */}
-          <div className="text-center text-[10px] text-slate-400 font-mono pt-4 border-t border-slate-800/60 space-y-1 print:text-black print:border-black">
-            <p className="font-semibold text-slate-300 print:text-black">
-              Thank you for dining with us!
+            <p className="text-xs font-bold text-slate-900 mt-1 uppercase">
+              {isTakeaway ? 'TAKEAWAY' : `TABLE ${tableNum}`}
             </p>
-            <p>Powered by OrderEzz a ARQ technologies product</p>
+
+            {(guestInfo.name || guestInfo.phone) && (
+              <div className="text-[10px] text-slate-700 pt-1 border-t border-dotted border-slate-300 font-bold">
+                {guestInfo.name && <span>Customer: {guestInfo.name}</span>}
+                {guestInfo.name && guestInfo.phone && <span> • </span>}
+                {guestInfo.phone && <span>Ph: {guestInfo.phone}</span>}
+              </div>
+            )}
+          </div>
+
+          {/* Items List */}
+          <div className="space-y-2 py-1">
+            <div className="flex justify-between font-bold text-[11px] pb-1 border-b border-slate-300 text-slate-700">
+              <span>ITEM</span>
+              <span>PRICE</span>
+            </div>
+
+            {(order.order_items || []).map((item, idx) => (
+              <div key={idx} className="flex justify-between text-slate-900 text-[11px]">
+                <span>
+                  <span className="font-bold mr-1">{item.quantity}x</span>
+                  {item.menu_item?.name || 'Item'}
+                </span>
+                <span>₹{(item.price_at_order * item.quantity).toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Totals Breakdown */}
+          <div className="pt-3 border-t border-dashed border-slate-400 space-y-1.5 text-slate-900">
+            <div className="flex justify-between font-bold text-sm pt-1 border-t border-slate-900">
+              <span>AMOUNT PAYABLE:</span>
+              <span>₹{order.total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Footer Note */}
+          <div className="text-center pt-3 border-t border-dashed border-slate-400 text-[10px] text-slate-600 space-y-0.5">
+            <p className="font-bold text-slate-900">Thank you for dining with us!</p>
+            <p>Please visit again</p>
           </div>
         </div>
       </div>

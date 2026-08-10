@@ -60,7 +60,7 @@ function OrderStatusContent() {
   const tableQrToken = tokenFromUrl || order.table?.qr_token;
 
   return (
-    <main className="menu-container px-4 py-6 pb-28">
+    <main className="menu-container px-4 py-6 pb-20">
       {/* Top Header with Navigation Buttons */}
       <header className="flex items-center justify-between mb-6 pb-2 border-b border-slate-800">
         <div className="flex items-center gap-2.5">
@@ -96,7 +96,7 @@ function OrderStatusContent() {
       </header>
 
       {/* Table Quick Assistance Bar ('Call Waiter' & 'Request Water') */}
-      {order.table_id && (
+      {order.table_id && order.status !== 'paid' && (
         <div className="mb-6 flex items-center justify-between bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl px-3.5 py-2.5">
           <span className="text-xs font-bold text-slate-300 font-display">Need Assistance?</span>
           <TableRequestButtons tableId={order.table_id} tableNumber={order.table?.table_number} />
@@ -104,10 +104,15 @@ function OrderStatusContent() {
       )}
 
       {/* Realtime Order Tracker Component */}
-      <OrderStatusTracker initialOrder={order} />
+      <OrderStatusTracker
+        initialOrder={order}
+        onStatusUpdated={(updatedOrder) => {
+          setOrder((prev) => (prev?.status !== updatedOrder.status ? updatedOrder : prev));
+        }}
+      />
 
       {/* Persistent Active Orders Banner */}
-      {tableQrToken && <ActiveOrderBanner tableToken={tableQrToken} />}
+      {tableQrToken && order.status !== 'paid' && <ActiveOrderBanner tableToken={tableQrToken} />}
     </main>
   );
 }

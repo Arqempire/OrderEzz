@@ -14,6 +14,7 @@ import Link from 'next/link';
 
 interface OrderStatusTrackerProps {
   initialOrder: Order;
+  onStatusUpdated?: (updatedOrder: Order) => void;
 }
 
 const statusSteps: Array<{ key: OrderStatus; title: string; desc: string; icon: React.ElementType }> = [
@@ -24,17 +25,23 @@ const statusSteps: Array<{ key: OrderStatus; title: string; desc: string; icon: 
   { key: 'paid', title: 'Completed', desc: 'Order settled at counter', icon: CheckCheck },
 ];
 
-export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialOrder }) => {
+export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialOrder, onStatusUpdated }) => {
   const [order, setOrder] = useState<Order>(initialOrder);
   const [sessionOrders, setSessionOrders] = useState<Order[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const currentStatusRef = useRef<string>(initialOrder.status);
+  const onStatusUpdatedRef = useRef(onStatusUpdated);
 
-  // Keep ref synchronized to avoid unnecessary useEffect re-subscriptions
+  useEffect(() => {
+    onStatusUpdatedRef.current = onStatusUpdated;
+  }, [onStatusUpdated]);
+
+  // Keep ref synchronized to avoid unnecessary useEffect re-subscriptions and notify parent of updates
   useEffect(() => {
     currentStatusRef.current = order.status;
-  }, [order.status]);
+    onStatusUpdatedRef.current?.(order);
+  }, [order]);
 
   const refreshOrder = useCallback(async () => {
     const updated = await fetchOrderDetailsById(order.id);

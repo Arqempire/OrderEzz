@@ -305,7 +305,7 @@ export default function CashierPanelPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 space-y-6">
+    <main className="flex-1 bg-slate-950 text-slate-100 p-4 md:p-8 space-y-6">
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div className="flex items-center gap-3">
