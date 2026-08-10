@@ -25,7 +25,7 @@ export function saveDismissedOrderId(orderId: string) {
 }
 
 /**
- * Gets or creates the dedicated Takeaway Counter Table (table_number: 0).
+ * Gets or creates the dedicated Takeaway Counter Table (table_number: 0 or 999).
  */
 async function getOrCreateTakeawayTableId(): Promise<string | null> {
   const supabase = createClient();
@@ -34,7 +34,8 @@ async function getOrCreateTakeawayTableId(): Promise<string | null> {
     const { data: existing } = await supabase
       .from('tables')
       .select('id')
-      .eq('table_number', 0)
+      .in('table_number', [0, 999])
+      .limit(1)
       .maybeSingle();
 
     if (existing?.id) {
@@ -44,7 +45,7 @@ async function getOrCreateTakeawayTableId(): Promise<string | null> {
     const { data: created, error } = await supabase
       .from('tables')
       .insert({
-        table_number: 0,
+        table_number: 999,
         is_active: true,
       })
       .select('id')

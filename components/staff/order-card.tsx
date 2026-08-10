@@ -123,6 +123,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
   const isTakeaway =
     !order.table_id ||
     order.table?.table_number === 0 ||
+    order.table?.table_number === 999 ||
     (order.table?.table_number as unknown) === 'Takeaway' ||
     order.order_items?.some((i) => i.notes?.includes('[Takeaway]'));
 

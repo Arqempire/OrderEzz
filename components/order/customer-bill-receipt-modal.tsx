@@ -38,8 +38,10 @@ export const CustomerBillReceiptModal: React.FC<CustomerBillReceiptModalProps> =
   const isTakeaway =
     !order.table_id ||
     tableNum === 0 ||
-    tableNum === '0' ||
-    tableNum === 'Takeaway' ||
+    tableNum === 999 ||
+    String(tableNum) === '0' ||
+    String(tableNum) === '999' ||
+    String(tableNum) === 'Takeaway' ||
     order.order_items?.some((i) => i.notes?.includes('[Takeaway]'));
 
   return (

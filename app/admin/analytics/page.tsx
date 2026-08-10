@@ -646,33 +646,42 @@ export default function AdminAnalyticsPage() {
                       No active orders in '{activeModalStatus}' stage.
                     </div>
                   ) : (
-                    modalFilteredOrders.map((ord) => (
-                      <div
-                        key={ord.id}
-                        className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs space-y-1.5 hover:border-amber-500/40 transition-colors"
-                      >
-                        <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
-                          <span className="font-bold text-amber-400 font-display">
-                            Table {ord.table?.table_number ?? 'N/A'}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            {new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
+                    modalFilteredOrders.map((ord) => {
+                      const isTakeaway =
+                        !ord.table_id ||
+                        ord.table?.table_number === 0 ||
+                        ord.table?.table_number === 999 ||
+                        (ord.table?.table_number as unknown) === 'Takeaway' ||
+                        ord.order_items?.some((i) => i.notes?.includes('[Takeaway]'));
 
-                        <div className="space-y-1 pl-1">
-                          {ord.order_items?.map((item) => (
-                            <div key={item.id} className="flex justify-between text-slate-300 text-[11px]">
-                              <span>
-                                <strong className="text-amber-400 mr-1.5">{item.quantity}x</strong>
-                                {item.menu_item?.name || 'Dish'}
-                              </span>
-                              {item.notes && <span className="text-[10px] text-slate-400 italic">({item.notes})</span>}
-                            </div>
-                          ))}
+                      return (
+                        <div
+                          key={ord.id}
+                          className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs space-y-1.5 hover:border-amber-500/40 transition-colors"
+                        >
+                          <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
+                            <span className="font-bold text-amber-400 font-display">
+                              {isTakeaway ? 'Takeaway' : `Table ${ord.table?.table_number ?? 'N/A'}`}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+
+                          <div className="space-y-1 pl-1">
+                            {ord.order_items?.map((item) => (
+                              <div key={item.id} className="flex justify-between text-slate-300 text-[11px]">
+                                <span>
+                                  <strong className="text-amber-400 mr-1.5">{item.quantity}x</strong>
+                                  {item.menu_item?.name || 'Dish'}
+                                </span>
+                                {item.notes && <span className="text-[10px] text-slate-400 italic">({item.notes})</span>}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>

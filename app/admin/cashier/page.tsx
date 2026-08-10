@@ -166,7 +166,7 @@ export default function CashierPanelPage() {
 
     for (const order of orders) {
       const hasTakeawayTag = order.order_items?.some((item) => item.notes?.includes('[Takeaway'));
-      const isTakeaway = !order.table_id || order.table?.table_number === 0 || (order.table?.table_number as unknown) === 'Takeaway' || hasTakeawayTag;
+      const isTakeaway = !order.table_id || order.table?.table_number === 0 || order.table?.table_number === 999 || (order.table?.table_number as unknown) === 'Takeaway' || hasTakeawayTag;
       const tableId = isTakeaway ? 'takeaway_counter' : (order.table?.id || order.table_id || 'unknown');
       const tableNumber = isTakeaway ? 'Takeaway' : (order.table?.table_number ?? 'Takeaway');
 
@@ -459,7 +459,7 @@ export default function CashierPanelPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="bg-amber-500 text-slate-950 font-extrabold text-sm px-3 py-1 rounded-xl font-display shadow-md shadow-amber-500/20">
-                          {group.tableNumber === 'Takeaway' || group.tableNumber === 0 ? 'Takeaway' : `Table ${group.tableNumber}`}
+                          {group.tableNumber === 'Takeaway' || group.tableNumber === 0 || group.tableNumber === 999 ? 'Takeaway' : `Table ${group.tableNumber}`}
                         </span>
                         <span className="text-xs font-bold text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full">
                           {group.orders.length} {group.orders.length === 1 ? 'order' : 'orders'}
@@ -656,7 +656,7 @@ export default function CashierPanelPage() {
                   Date: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                 </p>
                 <p className="text-xs font-bold text-slate-900 mt-1 uppercase">
-                  {receiptToPrint.tableNumber === 0 || receiptToPrint.tableNumber === 'Takeaway / Counter' || receiptToPrint.tableNumber === 'Takeaway'
+                  {receiptToPrint.tableNumber === 0 || receiptToPrint.tableNumber === 999 || receiptToPrint.tableNumber === 'Takeaway / Counter' || receiptToPrint.tableNumber === 'Takeaway'
                     ? 'TAKEAWAY'
                     : `TABLE ${receiptToPrint.tableNumber}`}
                 </p>
@@ -801,6 +801,13 @@ export default function CashierPanelPage() {
               ) : (
                 filteredHistoryOrders.map((order) => {
                   const isCancelled = order.status === 'cancelled';
+                  const hasTakeawayTag = order.order_items?.some((item) => item.notes?.includes('[Takeaway'));
+                  const isTakeaway =
+                    !order.table_id ||
+                    order.table?.table_number === 0 ||
+                    order.table?.table_number === 999 ||
+                    (order.table?.table_number as unknown) === 'Takeaway' ||
+                    hasTakeawayTag;
 
                   return (
                     <div
@@ -817,10 +824,12 @@ export default function CashierPanelPage() {
                             className={`font-extrabold text-xs px-2.5 py-0.5 rounded-lg border font-display ${
                               isCancelled
                                 ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                : isTakeaway
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                             }`}
                           >
-                            Table {order.table?.table_number ?? '?'}
+                            {isTakeaway ? 'Takeaway' : `Table ${order.table?.table_number ?? '?'}`}
                           </span>
                           <span className="text-xs font-mono text-slate-400">
                             #{order.id.slice(0, 6)}
@@ -872,8 +881,8 @@ export default function CashierPanelPage() {
                             onClick={() => {
                               setIsHistoryOpen(false);
                               setReceiptToPrint({
-                                tableId: order.table_id || 'table',
-                                tableNumber: order.table?.table_number ?? 'Counter',
+                                tableId: isTakeaway ? 'takeaway_counter' : (order.table_id || 'table'),
+                                tableNumber: isTakeaway ? 'Takeaway' : (order.table?.table_number ?? 'Counter'),
                                 orders: [order],
                                 groupTotal: Number(order.total),
                               });

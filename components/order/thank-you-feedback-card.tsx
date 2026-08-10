@@ -71,9 +71,20 @@ export const ThankYouFeedbackCard: React.FC<ThankYouFeedbackCardProps> = ({ orde
         <h1 className="text-3xl font-extrabold text-slate-100 font-display tracking-tight">
           Thank You for Dining With Us!
         </h1>
-        <p className="text-xs text-slate-300 mt-2 max-w-sm mx-auto leading-relaxed">
-          Your order for <span className="font-bold text-amber-400">Table {order.table?.table_number ?? ''}</span> is complete and settled. We hope you had a memorable culinary experience!
-        </p>
+        {(() => {
+          const isTakeaway =
+            !order.table_id ||
+            order.table?.table_number === 0 ||
+            order.table?.table_number === 999 ||
+            (order.table?.table_number as unknown) === 'Takeaway' ||
+            order.order_items?.some((i) => i.notes?.includes('[Takeaway]'));
+
+          return (
+            <p className="text-xs text-slate-300 mt-2 max-w-sm mx-auto leading-relaxed">
+              Your {isTakeaway ? 'takeaway order' : <>order for <span className="font-bold text-amber-400">Table {order.table?.table_number ?? ''}</span></>} is complete and settled. We hope you had a memorable culinary experience!
+            </p>
+          );
+        })()}
 
         {/* Action Buttons & QR Scan Prompt */}
         <div className="flex flex-col items-center justify-center gap-3.5 pt-6">

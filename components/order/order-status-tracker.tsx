@@ -228,9 +228,20 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
         <div className="flex items-center justify-center gap-2 text-amber-400 font-bold text-sm font-display">
           <Utensils size={18} /> Want to add extra drinks or dessert?
         </div>
-        <p className="text-xs text-slate-400 max-w-sm mx-auto">
-          Your order is actively being processed! You can browse the menu anytime to order more items for Table {order.table?.table_number ?? ''}.
-        </p>
+        {(() => {
+          const isTakeaway =
+            !order.table_id ||
+            order.table?.table_number === 0 ||
+            order.table?.table_number === 999 ||
+            (order.table?.table_number as unknown) === 'Takeaway' ||
+            order.order_items?.some((i) => i.notes?.includes('[Takeaway]'));
+
+          return (
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              Your order is actively being processed! {isTakeaway ? 'You can browse the menu anytime to order more items.' : `You can browse the menu anytime to order more items for Table ${order.table?.table_number ?? ''}.`}
+            </p>
+          );
+        })()}
         <div className="flex items-center justify-center gap-3 pt-1">
           {tableQrToken && (
             <Link
