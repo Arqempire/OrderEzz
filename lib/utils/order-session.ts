@@ -68,3 +68,17 @@ export function removeOrderFromLocalStorage(tableToken: string, orderId: string)
     console.error('Error removing order ID from localStorage:', err);
   }
 }
+
+/**
+ * Clears all stored order IDs for a specific table QR token.
+ */
+export function clearTableSession(tableToken: string): void {
+  if (!tableToken || typeof window === 'undefined') return;
+
+  try {
+    const key = getStorageKey(tableToken);
+    localStorage.removeItem(key);
+  } catch (err) {
+    console.error('Error clearing table session from localStorage:', err);
+  }
+}

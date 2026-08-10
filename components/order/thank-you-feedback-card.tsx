@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import { Order } from '@/lib/types/database.types';
-import { Star, Heart, MessageSquare, CheckCircle2, Utensils, PlusCircle, Sparkles } from 'lucide-react';
+import { Star, Heart, MessageSquare, CheckCircle2, Utensils, Sparkles, Download, Printer, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Link from 'next/link';
-
 import { saveCustomerFeedback } from '@/lib/queries/feedback';
+import { CustomerBillReceiptModal } from '@/components/order/customer-bill-receipt-modal';
+import { clearTableSession } from '@/lib/utils/order-session';
 
 interface ThankYouFeedbackCardProps {
   order: Order;
@@ -29,6 +30,7 @@ export const ThankYouFeedbackCard: React.FC<ThankYouFeedbackCardProps> = ({ orde
   const [customNote, setCustomNote] = useState<string>('');
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isReceiptOpen, setIsReceiptOpen] = useState<boolean>(false);
 
   const tableQrToken = order.table?.qr_token;
 
@@ -73,17 +75,22 @@ export const ThankYouFeedbackCard: React.FC<ThankYouFeedbackCardProps> = ({ orde
           Your order for <span className="font-bold text-amber-400">Table {order.table?.table_number ?? ''}</span> is complete and settled. We hope you had a memorable culinary experience!
         </p>
 
-        {/* Action Buttons */}
-        {tableQrToken && (
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-6">
-            <Link
-              href={`/order?t=${tableQrToken}`}
-              className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-5 py-3 rounded-2xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2"
-            >
-              <PlusCircle size={16} /> Order Again for Table {order.table?.table_number}
-            </Link>
+        {/* Action Buttons & QR Scan Prompt */}
+        <div className="flex flex-col items-center justify-center gap-3.5 pt-6">
+          <button
+            onClick={() => setIsReceiptOpen(true)}
+            className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-6 py-3 rounded-2xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          >
+            <Download size={16} /> Download Bill / Print Receipt
+          </button>
+
+          <div className="bg-slate-900/90 border border-amber-500/30 rounded-2xl px-4 py-3 max-w-sm text-center shadow-lg">
+            <p className="text-xs font-bold text-amber-300 flex items-center justify-center gap-2">
+              <QrCode size={16} className="text-amber-400 flex-shrink-0 animate-pulse" />
+              <span>To place a new order, please scan your table QR code </span>
+            </p>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Feedback Section */}
@@ -122,10 +129,10 @@ export const ThankYouFeedbackCard: React.FC<ThankYouFeedbackCardProps> = ({ orde
                 {rating === 5
                   ? 'Outstanding! 🌟'
                   : rating === 4
-                  ? 'Very Good! 😊'
-                  : rating === 3
-                  ? 'Average 👌'
-                  : 'Needs Improvement 🙁'}
+                    ? 'Very Good! 😊'
+                    : rating === 3
+                      ? 'Average 👌'
+                      : 'Needs Improvement 🙁'}
               </span>
             </div>
 
@@ -140,11 +147,10 @@ export const ThankYouFeedbackCard: React.FC<ThankYouFeedbackCardProps> = ({ orde
                       key={tag}
                       type="button"
                       onClick={() => toggleTag(tag)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                        isSelected
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${isSelected
                           ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold'
                           : 'bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800'
-                      }`}
+                        }`}
                     >
                       {isSelected ? '✓ ' : '+ '} {tag}
                     </button>
@@ -228,7 +234,23 @@ export const ThankYouFeedbackCard: React.FC<ThankYouFeedbackCardProps> = ({ orde
             ₹{order.total.toFixed(2)}
           </span>
         </div>
+
+        <div className="pt-2">
+          <button
+            onClick={() => setIsReceiptOpen(true)}
+            className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+          >
+            <Printer size={14} className="text-amber-400" /> View & Print Itemized Bill Receipt
+          </button>
+        </div>
       </div>
+
+      {/* Customer Printable Bill Receipt Modal */}
+      <CustomerBillReceiptModal
+        order={order}
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+      />
     </div>
   );
 };

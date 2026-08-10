@@ -108,6 +108,39 @@ export async function fetchAllActiveOrders(): Promise<Order[]> {
 }
 
 /**
+ * Fetches the most recent order placed for a specific table.
+ */
+export async function fetchLatestOrderForTable(tableId: string): Promise<Order | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      table:tables(id, table_number, qr_token),
+      order_items(
+        id,
+        order_id,
+        menu_item_id,
+        quantity,
+        notes,
+        price_at_order,
+        menu_item:menu_items(name, image_url)
+      )
+    `)
+    .eq('table_id', tableId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching latest order for table:', error);
+    return null;
+  }
+
+  return (data as Order) || null;
+}
+
+/**
  * Advances or updates an order's status (Staff action).
  * Calls server API route first; if that fails, falls back to RPC and direct client update.
  */

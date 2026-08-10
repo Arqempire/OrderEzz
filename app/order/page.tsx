@@ -153,6 +153,8 @@ function CustomerOrderContent() {
     );
   }
 
+
+
   if (invalidError || !tableId) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center text-slate-100 max-w-sm mx-auto">

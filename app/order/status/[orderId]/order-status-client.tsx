@@ -79,13 +79,18 @@ function OrderStatusContent() {
 
         {/* Quick Navigation Links */}
         <div className="flex items-center gap-2">
-          {tableQrToken && (
+          {tableQrToken && order.status !== 'paid' && (
             <Link
               href={`/order?t=${tableQrToken}`}
               className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1"
             >
               <PlusCircle size={14} /> Explore Menu
             </Link>
+          )}
+          {order.status === 'paid' && (
+            <span className="text-[11px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-xl font-mono">
+              ✓ Session Closed
+            </span>
           )}
         </div>
       </header>
