@@ -4,27 +4,40 @@ import React, { useEffect, useState, useCallback, useMemo, Suspense } from 'reac
 import { useSearchParams } from 'next/navigation';
 import { resolveTableFromQrToken } from '@/lib/queries/tables';
 import { fetchMenuCategories, fetchMenuItems } from '@/lib/queries/menu';
-import { MenuCategory, MenuItem } from '@/lib/types/database.types';
+import { MenuCategory, MenuItem, TableRow } from '@/lib/types/database.types';
 import { MenuCard } from '@/components/order/menu-card';
 import { CategoryNav } from '@/components/order/category-nav';
 import { StickyCartBar } from '@/components/order/sticky-cart-bar';
 import { CartBottomSheet } from '@/components/order/cart-bottom-sheet';
 import { ActiveOrderBanner } from '@/components/order/active-order-banner';
 import { TableRequestButtons } from '@/components/order/table-request-buttons';
+import { GuestIdentityScreen, GuestInfo } from '@/components/order/guest-identity-screen';
 import { useCartStore } from '@/lib/store/cart-store';
 import { createClient } from '@/lib/supabase/client';
 import { Search, UtensilsCrossed, AlertTriangle, Loader2, RefreshCw, LayoutGrid, X } from 'lucide-react';
 import { toast } from 'sonner';
 
+/** Shows a personalized greeting in the header if the guest provided their name. */
+function GuestGreeting() {
+  const guestName = useCartStore((s) => s.guestName);
+  return (
+    <span className="text-[10px] text-amber-400 font-medium block -mt-0.5 whitespace-nowrap">
+      {guestName ? `Hi, ${guestName}! 👋` : 'Table Menu'}
+    </span>
+  );
+}
+
 function CustomerOrderContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('t');
 
-  const { setTableId, removeItem } = useCartStore();
+  const { setTableId, removeItem, setGuest } = useCartStore();
 
   const [tableId, setLocalTableId] = useState<string | null>(null);
+  const [tableRow, setTableRow] = useState<TableRow | null>(null);
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [invalidError, setInvalidError] = useState<string | null>(null);
+  const [showGuestScreen, setShowGuestScreen] = useState(false);
 
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -102,12 +115,16 @@ function CustomerOrderContent() {
 
         setLocalTableId(resolved.table_id);
         setTableId(resolved.table_id);
+        setTableRow(resolved as unknown as TableRow);
         setCategories(fetchedCategories);
         setMenuItems(fetchedItems);
 
         if (fetchedCategories.length > 0) {
           setSelectedCategoryId(fetchedCategories[0].id);
         }
+
+        // Show guest identity screen before revealing the menu
+        setShowGuestScreen(true);
       } catch (err: any) {
         console.error('Error loading menu session:', err);
         setInvalidError(err.message || 'Failed to load menu. Please check your connection and try again.');
@@ -153,7 +170,18 @@ function CustomerOrderContent() {
     );
   }
 
-
+  if (showGuestScreen && tableRow && token) {
+    return (
+      <GuestIdentityScreen
+        tableNumber={tableRow.table_number}
+        tableToken={token}
+        onContinue={(guest: GuestInfo) => {
+          setGuest(guest.name, guest.phone);
+          setShowGuestScreen(false);
+        }}
+      />
+    );
+  }
 
   if (invalidError || !tableId) {
     return (
@@ -199,7 +227,7 @@ function CustomerOrderContent() {
               <h1 className="text-sm font-extrabold font-display leading-tight text-slate-100">
                 OrderEzz
               </h1>
-              <span className="text-[10px] text-amber-400 font-medium block -mt-0.5 whitespace-nowrap">Table Menu</span>
+              <GuestGreeting />
             </div>
           </div>
 

@@ -4,7 +4,10 @@ import { MenuItem, CartItem } from '@/lib/types/database.types';
 interface CartState {
   tableId: string | null;
   items: CartItem[];
+  guestName: string;
+  guestPhone: string;
   setTableId: (tableId: string) => void;
+  setGuest: (name: string, phone: string) => void;
   addItem: (menuItem: MenuItem, quantity?: number, notes?: string) => void;
   removeItem: (menuItemId: string) => void;
   updateQuantity: (menuItemId: string, quantity: number) => void;
@@ -17,8 +20,11 @@ interface CartState {
 export const useCartStore = create<CartState>((set, get) => ({
   tableId: null,
   items: [],
+  guestName: '',
+  guestPhone: '',
 
   setTableId: (tableId: string) => set({ tableId }),
+  setGuest: (name: string, phone: string) => set({ guestName: name, guestPhone: phone }),
 
   addItem: (menuItem: MenuItem, quantity = 1, notes = '') => {
     set((state) => {

@@ -97,6 +97,7 @@ export async function fetchOrdersAwaitingPayment(): Promise<Order[]> {
       order_items(
         id,
         quantity,
+        notes,
         price_at_order,
         menu_item:menu_items(name)
       )
@@ -199,6 +200,7 @@ export async function fetchTodaysPaidOrders(): Promise<Order[]> {
       order_items(
         id,
         quantity,
+        notes,
         price_at_order,
         menu_item:menu_items(name)
       )

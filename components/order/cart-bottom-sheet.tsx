@@ -26,7 +26,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   tableToken,
 }) => {
   const router = useRouter();
-  const { items, updateQuantity, updateNotes, removeItem, clearCart, getTotalPrice } = useCartStore();
+  const { items, guestName, guestPhone, updateQuantity, updateNotes, removeItem, clearCart, getTotalPrice } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeNoteItemId, setActiveNoteItemId] = useState<string | null>(null);
   const [generalKitchenNote, setGeneralKitchenNote] = useState<string>('');
@@ -47,13 +47,20 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
     setIsSubmitting(true);
 
     try {
+      const guestDetails = [
+        guestName?.trim() ? `Guest: ${guestName.trim()}` : '',
+        guestPhone?.trim() ? `Phone: ${guestPhone.trim()}` : '',
+      ].filter(Boolean).join(' | ');
+      const guestNote = guestDetails ? `[${guestDetails}]` : '';
+
       const orderPayload = items.map((item, index) => {
         const itemNotes = item.notes?.trim();
         const kitchenNote = generalKitchenNote.trim();
         
-        // Attach overall kitchen note to the first item so kitchen staff sees it clearly
+        // Attach overall kitchen note and guest details to the first item so staff sees them clearly
         const combinedNotes = [
           itemNotes,
+          index === 0 && guestNote ? guestNote : '',
           index === 0 && kitchenNote ? `[Kitchen: ${kitchenNote}]` : '',
         ]
           .filter(Boolean)

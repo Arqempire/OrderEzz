@@ -3,9 +3,10 @@
 import React from 'react';
 import { Order, OrderStatus } from '@/lib/types/database.types';
 import { OrderStatusBadge } from '@/components/ui/badge';
-import { Clock, ArrowRight, XCircle } from 'lucide-react';
+import { Clock, ArrowRight, XCircle, User, Phone } from 'lucide-react';
 import { updateOrderStatus } from '@/lib/queries/orders';
 import { markOrderCancelledByStaff, getOrderCancellationSource } from '@/lib/utils/order-cancellation';
+import { extractGuestInfoFromOrder, formatCleanItemNotes } from '@/lib/utils/guest-info';
 import { toast } from 'sonner';
 
 interface OrderCardProps {
@@ -118,6 +119,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
     ? getOrderCancellationSource(order.id, order.cancelled_by)
     : 'unknown';
 
+  const guestInfo = extractGuestInfoFromOrder(order);
+
   return (
     <div
       className={`kanban-card group transition-all duration-300 relative overflow-hidden ${
@@ -125,63 +128,85 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
       }`}
     >
       {/* Top Header: Table Number, Order ID, Time & Cancel Action */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800 gap-1.5 w-full min-w-0">
-        {/* Left Side: Table Badge & Order ID */}
-        <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
-          <span className="bg-amber-500 text-slate-950 font-extrabold text-xs px-2 py-0.5 rounded-lg font-display flex-shrink-0">
-            Table {order.table?.table_number ?? '?'}
-          </span>
-          <span className="text-[11px] text-slate-300 font-mono font-bold truncate min-w-0">
-            #{order.id.slice(0, 6)}
-          </span>
+      <div className="flex flex-col gap-1.5 pb-2 border-b border-slate-800 w-full">
+        <div className="flex items-center justify-between gap-1.5 w-full min-w-0">
+          {/* Left Side: Table Badge & Order ID */}
+          <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
+            <span className="bg-amber-500 text-slate-950 font-extrabold text-xs px-2 py-0.5 rounded-lg font-display flex-shrink-0">
+              Table {order.table?.table_number ?? '?'}
+            </span>
+            <span className="text-[11px] text-slate-300 font-mono font-bold truncate min-w-0">
+              #{order.id.slice(0, 6)}
+            </span>
+          </div>
+
+          {/* Right Side: Status / Time / Cancel Button */}
+          <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto text-right">
+            {order.status === 'served' && countdown > 0 ? (
+              <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                Clearing {countdown}s
+              </span>
+            ) : (
+              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 text-[10px] text-slate-400 font-mono whitespace-nowrap">
+                  <Clock size={11} className="flex-shrink-0" />
+                  <span>{formatOrderTime(order.created_at)}</span>
+                </div>
+                {/* Cancel Button ONLY shown for active non-served/non-cancelled orders */}
+                {order.status !== 'served' && order.status !== 'paid' && order.status !== 'cancelled' && (
+                  <button
+                    onClick={handleCancelOrder}
+                    className="text-slate-400 hover:text-red-400 p-0.5 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer flex-shrink-0 ml-0.5"
+                    title="Cancel Order"
+                  >
+                    <XCircle size={14} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right Side: Status / Time / Cancel Button */}
-        <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto text-right">
-          {order.status === 'served' && countdown > 0 ? (
-            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              Clearing {countdown}s
-            </span>
-          ) : (
-            <div className="flex items-center gap-1">
-              <div className="flex items-center gap-0.5 text-[10px] text-slate-400 font-mono whitespace-nowrap">
-                <Clock size={11} className="flex-shrink-0" />
-                <span>{formatOrderTime(order.created_at)}</span>
-              </div>
-              {/* Cancel Button ONLY shown for active non-served/non-cancelled orders */}
-              {order.status !== 'served' && order.status !== 'paid' && order.status !== 'cancelled' && (
-                <button
-                  onClick={handleCancelOrder}
-                  className="text-slate-400 hover:text-red-400 p-0.5 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer flex-shrink-0 ml-0.5"
-                  title="Cancel Order"
-                >
-                  <XCircle size={14} />
-                </button>
-              )}
+        {/* Guest Info Badge */}
+        {(guestInfo.name || guestInfo.phone) && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-2 py-1 flex items-center justify-between text-[11px] gap-1.5">
+            <div className="flex items-center gap-1 text-amber-300 font-bold truncate">
+              <User size={12} className="text-amber-400 flex-shrink-0" />
+              <span>{guestInfo.name || 'Guest'}</span>
             </div>
-          )}
-        </div>
+            {guestInfo.phone && (
+              <div className="flex items-center gap-1 text-slate-300 font-mono text-[10px] flex-shrink-0">
+                <Phone size={10} className="text-amber-400" />
+                <span>{guestInfo.phone}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Items list */}
       <div className="space-y-2 py-1">
-        {order.order_items?.map((item) => (
-          <div key={item.id} className="text-xs flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <span className="font-bold text-amber-400 mr-1.5">{item.quantity}x</span>
-              <span className="text-slate-200 font-medium">{item.menu_item?.name || 'Item'}</span>
-              {item.notes && (
-                <p className="text-[11px] text-amber-300/80 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 mt-0.5 italic">
-                  Note: {item.notes}
-                </p>
-              )}
+        {order.order_items?.map((item) => {
+          const cleanNotes = formatCleanItemNotes(item.notes);
+
+          return (
+            <div key={item.id} className="text-xs flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <span className="font-bold text-amber-400 mr-1.5">{item.quantity}x</span>
+                <span className="text-slate-200 font-medium">{item.menu_item?.name || 'Item'}</span>
+                {cleanNotes && (
+                  <p className="text-[11px] text-amber-300/80 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 mt-0.5 italic">
+                    Note: {cleanNotes}
+                  </p>
+                )}
+              </div>
+              <span className="text-slate-400 font-mono flex-shrink-0">
+                ₹{(item.price_at_order * item.quantity).toFixed(2)}
+              </span>
             </div>
-            <span className="text-slate-400 font-mono flex-shrink-0">
-              ₹{(item.price_at_order * item.quantity).toFixed(2)}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Footer & Primary Action Button */}

@@ -27,10 +27,13 @@ import {
   X,
   History,
   ShoppingBag,
+  User,
+  Phone,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { TakeawayBillingModal, PosCartItem } from '@/components/cashier/takeaway-billing-modal';
+import { extractGuestInfoFromOrder, extractGuestInfoFromTableOrders, formatCleanItemNotes } from '@/lib/utils/guest-info';
 
 interface TableOrderGroup {
   tableId: string;
@@ -444,6 +447,7 @@ export default function CashierPanelPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {tableGroups.map((group) => {
               const isGroupProcessing = group.orders.every((o) => processingOrderIds[o.id]);
+              const tableGuest = extractGuestInfoFromTableOrders(group.orders);
 
               return (
                 <div
@@ -451,22 +455,40 @@ export default function CashierPanelPage() {
                   className="glass-card rounded-3xl p-5 border border-slate-800 space-y-4 hover:border-amber-500/40 transition-all shadow-xl flex flex-col justify-between"
                 >
                   {/* Table Group Header */}
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="bg-amber-500 text-slate-950 font-extrabold text-sm px-3 py-1 rounded-xl font-display shadow-md shadow-amber-500/20">
-                        {group.tableNumber === 'Takeaway' || group.tableNumber === 0 ? 'Takeaway' : `Table ${group.tableNumber}`}
-                      </span>
-                      <span className="text-xs font-bold text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full">
-                        {group.orders.length} {group.orders.length === 1 ? 'order' : 'orders'}
-                      </span>
+                  <div className="flex flex-col gap-2 pb-3 border-b border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-amber-500 text-slate-950 font-extrabold text-sm px-3 py-1 rounded-xl font-display shadow-md shadow-amber-500/20">
+                          {group.tableNumber === 'Takeaway' || group.tableNumber === 0 ? 'Takeaway' : `Table ${group.tableNumber}`}
+                        </span>
+                        <span className="text-xs font-bold text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full">
+                          {group.orders.length} {group.orders.length === 1 ? 'order' : 'orders'}
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold block">Combined Total</span>
+                        <span className="text-lg font-extrabold text-amber-400 font-display">
+                          ₹{group.groupTotal.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Combined Total</span>
-                      <span className="text-lg font-extrabold text-amber-400 font-display">
-                        ₹{group.groupTotal.toFixed(2)}
-                      </span>
-                    </div>
+                    {/* Guest Information Badge if provided */}
+                    {(tableGuest.name || tableGuest.phone) && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-1.5 text-amber-300 font-medium truncate">
+                          <User size={13} className="text-amber-400 flex-shrink-0" />
+                          <span className="font-bold">{tableGuest.name || 'Guest'}</span>
+                        </div>
+                        {tableGuest.phone && (
+                          <div className="flex items-center gap-1 text-slate-300 text-[11px] font-mono flex-shrink-0">
+                            <Phone size={11} className="text-amber-400" />
+                            <span>{tableGuest.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Sub-Orders List for this Table */}
@@ -474,6 +496,7 @@ export default function CashierPanelPage() {
                     {group.orders.map((order) => {
                       const isProcessing = !!processingOrderIds[order.id];
                       const isCancelled = order.status === 'cancelled';
+                      const orderGuest = extractGuestInfoFromOrder(order);
 
                       return (
                         <div
@@ -495,20 +518,33 @@ export default function CashierPanelPage() {
                           </div>
 
                           {/* Sub-order Items */}
-                          <div className="space-y-1 py-1">
-                            {order.order_items?.map((item) => (
-                              <div key={item.id} className="text-xs flex justify-between gap-2">
-                                <span className={isCancelled ? 'text-slate-400 line-through' : 'text-slate-300'}>
-                                  <span className={`font-bold mr-1 ${isCancelled ? 'text-red-400/80' : 'text-amber-400'}`}>
-                                    {item.quantity}x
-                                  </span>
-                                  {item.menu_item?.name || 'Item'}
-                                </span>
-                                <span className={`font-mono text-[11px] ${isCancelled ? 'text-red-400/80 line-through' : 'text-slate-400'}`}>
-                                  ₹{(item.price_at_order * item.quantity).toFixed(2)}
-                                </span>
-                              </div>
-                            ))}
+                          <div className="space-y-1.5 py-1">
+                            {order.order_items?.map((item) => {
+                              const cleanNotes = formatCleanItemNotes(item.notes);
+
+                              return (
+                                <div key={item.id} className="text-xs space-y-0.5">
+                                  <div className="flex justify-between gap-2">
+                                    <span className={isCancelled ? 'text-slate-400 line-through' : 'text-slate-300'}>
+                                      <span className={`font-bold mr-1 ${isCancelled ? 'text-red-400/80' : 'text-amber-400'}`}>
+                                        {item.quantity}x
+                                      </span>
+                                      {item.menu_item?.name || 'Item'}
+                                    </span>
+                                    <span className={`font-mono text-[11px] ${isCancelled ? 'text-red-400/80 line-through' : 'text-slate-400'}`}>
+                                      ₹{(item.price_at_order * item.quantity).toFixed(2)}
+                                    </span>
+                                  </div>
+
+                                  {/* Kitchen / Item Special Instructions */}
+                                  {cleanNotes && (
+                                    <p className="text-[11px] text-amber-300/90 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-0.5 italic">
+                                      Note: {cleanNotes}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
 
                           {/* Sub-order Footer */}
@@ -624,6 +660,19 @@ export default function CashierPanelPage() {
                     ? 'TAKEAWAY'
                     : `TABLE ${receiptToPrint.tableNumber}`}
                 </p>
+                {(() => {
+                  const receiptGuest = extractGuestInfoFromTableOrders(receiptToPrint.orders);
+                  if (receiptGuest.name || receiptGuest.phone) {
+                    return (
+                      <div className="text-[10px] text-slate-700 pt-1 border-t border-dotted border-slate-300 font-bold">
+                        {receiptGuest.name && <span>Customer: {receiptGuest.name}</span>}
+                        {receiptGuest.name && receiptGuest.phone && <span> • </span>}
+                        {receiptGuest.phone && <span>Ph: {receiptGuest.phone}</span>}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               {/* Items List */}
