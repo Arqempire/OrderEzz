@@ -120,6 +120,11 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
     : 'unknown';
 
   const guestInfo = extractGuestInfoFromOrder(order);
+  const isTakeaway =
+    !order.table_id ||
+    order.table?.table_number === 0 ||
+    (order.table?.table_number as unknown) === 'Takeaway' ||
+    order.order_items?.some((i) => i.notes?.includes('[Takeaway]'));
 
   return (
     <div
@@ -133,7 +138,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdated }) 
           {/* Left Side: Table Badge & Order ID */}
           <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
             <span className="bg-amber-500 text-slate-950 font-extrabold text-xs px-2 py-0.5 rounded-lg font-display flex-shrink-0">
-              Table {order.table?.table_number ?? '?'}
+              {isTakeaway ? 'Takeaway' : `Table ${order.table?.table_number ?? '?'}`}
             </span>
             <span className="text-[11px] text-slate-300 font-mono font-bold truncate min-w-0">
               #{order.id.slice(0, 6)}

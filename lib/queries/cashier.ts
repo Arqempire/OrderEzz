@@ -25,6 +25,42 @@ export function saveDismissedOrderId(orderId: string) {
 }
 
 /**
+ * Gets or creates the dedicated Takeaway Counter Table (table_number: 0).
+ */
+async function getOrCreateTakeawayTableId(): Promise<string | null> {
+  const supabase = createClient();
+
+  try {
+    const { data: existing } = await supabase
+      .from('tables')
+      .select('id')
+      .eq('table_number', 0)
+      .maybeSingle();
+
+    if (existing?.id) {
+      return existing.id;
+    }
+
+    const { data: created, error } = await supabase
+      .from('tables')
+      .insert({
+        table_number: 0,
+        is_active: true,
+      })
+      .select('id')
+      .maybeSingle();
+
+    if (!error && created?.id) {
+      return created.id;
+    }
+  } catch (err) {
+    console.error('Error getting/creating takeaway table:', err);
+  }
+
+  return null;
+}
+
+/**
  * Creates a Takeaway / Walk-in order directly from the Cashier Panel POS.
  */
 export async function createTakeawayOrder(
@@ -33,41 +69,25 @@ export async function createTakeawayOrder(
 ): Promise<{ orderId: string | null; error: string | null }> {
   const supabase = createClient();
 
-  const formattedItems = items.map((item) => ({
-    menu_item_id: item.menuItemId,
-    quantity: item.quantity,
-    notes: item.notes || '',
-  }));
+  const formattedItems = items.map((item, index) => {
+    const itemNotes = item.notes?.trim() || '';
+    const takeawayTag = index === 0 ? '[Takeaway]' : '';
+    const combinedNotes = [itemNotes, takeawayTag].filter(Boolean).join(' | ');
 
-  // 1. Try placing order with p_table_id: null
-  let { data: orderId, error: rpcError } = await supabase.rpc('place_order_with_items', {
-    p_table_id: null,
-    p_items: formattedItems,
+    return {
+      menu_item_id: item.menuItemId,
+      quantity: item.quantity,
+      notes: combinedNotes,
+    };
   });
 
-  // 2. Seamless Fallback: If remote Supabase schema hasn't executed migration 029 yet (table_id NOT NULL), use any existing active table ID
-  if (rpcError || !orderId) {
-    console.warn('RPC p_table_id null failed, attempting active table fallback:', rpcError?.message);
+  // Get dedicated Takeaway table ID (table_number: 0) to prevent fallback to active dine-in tables
+  const takeawayTableId = await getOrCreateTakeawayTableId();
 
-    const { data: activeTables } = await supabase
-      .from('tables')
-      .select('id')
-      .eq('is_active', true)
-      .limit(1);
-
-    if (activeTables && activeTables.length > 0) {
-      const fallbackTableId = activeTables[0].id;
-      const { data: fallbackOrderId, error: fallbackError } = await supabase.rpc('place_order_with_items', {
-        p_table_id: fallbackTableId,
-        p_items: formattedItems,
-      });
-
-      if (!fallbackError && fallbackOrderId) {
-        orderId = fallbackOrderId;
-        rpcError = null;
-      }
-    }
-  }
+  const { data: orderId, error: rpcError } = await supabase.rpc('place_order_with_items', {
+    p_table_id: takeawayTableId,
+    p_items: formattedItems,
+  });
 
   if (rpcError || !orderId) {
     console.error('Error placing takeaway order:', rpcError);

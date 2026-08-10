@@ -158,17 +158,25 @@ body {
     margin: 10mm;
   }
 
-  /* Hide background dashboard UI: headers, footers, navs, forms, buttons, cards */
+  /* Hide background dashboard UI: headers, footers, navs, forms, buttons, cards, toasts & popups */
   header,
   footer,
   nav,
   aside,
   form,
   button,
+  [data-sonner-toaster],
+  [data-sonner-toast],
+  [role="status"],
+  [role="alert"],
+  .toaster,
+  .sonner-toast,
   .table-card,
   .no-print,
   .print\:hidden {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
   }
 
   body {

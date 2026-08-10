@@ -41,12 +41,13 @@ export function extractGuestInfoFromTableOrders(orders: Order[]): ExtractedGuest
 }
 
 /**
- * Cleans item notes for display by removing internal [Guest: ...] tags.
+ * Cleans item notes for display by removing internal [Guest: ...] and [Takeaway] tags.
  */
 export function formatCleanItemNotes(notes: string | null | undefined): string {
   if (!notes) return '';
   return notes
     .replace(/\[Guest:\s*[^|\]]+(?:\|\s*Phone:\s*[^\]]+)?\]/g, '')
+    .replace(/\[Takeaway\]/g, '')
     .replace(/^\|+|\|+$/g, '')
     .trim();
 }

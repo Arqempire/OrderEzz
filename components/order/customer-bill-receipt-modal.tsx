@@ -35,7 +35,12 @@ export const CustomerBillReceiptModal: React.FC<CustomerBillReceiptModalProps> =
 
   const guestInfo = extractGuestInfoFromOrder(order);
   const tableNum = order.table?.table_number ?? '?';
-  const isTakeaway = tableNum === 0 || tableNum === '0' || tableNum === 'Takeaway';
+  const isTakeaway =
+    !order.table_id ||
+    tableNum === 0 ||
+    tableNum === '0' ||
+    tableNum === 'Takeaway' ||
+    order.order_items?.some((i) => i.notes?.includes('[Takeaway]'));
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in print:p-0 print:bg-white print-receipt-modal">
@@ -45,7 +50,7 @@ export const CustomerBillReceiptModal: React.FC<CustomerBillReceiptModalProps> =
       {/* Dialog Card */}
       <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh] print:max-w-none print:w-full print:border-none print:shadow-none print:rounded-none print:bg-white print:text-black print-dialog-box p-5 space-y-4">
         {/* Top Control Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 print:hidden">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800 print:hidden no-print">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-200 font-display">
             <Printer size={16} className="text-amber-400" /> Customer Bill Receipt
           </div>
