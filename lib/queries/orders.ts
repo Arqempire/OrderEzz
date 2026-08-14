@@ -45,7 +45,43 @@ export async function fetchOrderDetailsById(orderId: string): Promise<Order | nu
     });
 
     if (!rpcError && rpcData && typeof rpcData === 'object' && (rpcData as any).id) {
-      return rpcData as Order;
+      const orderRes = rpcData as Order;
+
+      // Handle array table property if Supabase returned array
+      if (Array.isArray(orderRes.table)) {
+        orderRes.table = (orderRes.table as any[])[0] || null;
+      }
+
+      // Handle direct top-level table_number property (e.g. RPC get_order_status migration 020)
+      if ((rpcData as any).table_number !== undefined && (rpcData as any).table_number !== null) {
+        orderRes.table = {
+          id: orderRes.table_id || '',
+          table_number: (rpcData as any).table_number,
+          qr_token: '',
+          is_active: true,
+          created_at: '',
+        };
+      }
+
+      // If table_id is present but table_number is still missing/null, fetch table details
+      if (
+        orderRes.table_id &&
+        (!orderRes.table || orderRes.table.table_number === null || orderRes.table.table_number === undefined)
+      ) {
+        try {
+          const { data: tableData } = await supabase
+            .from('tables')
+            .select('*')
+            .eq('id', orderRes.table_id)
+            .single();
+          if (tableData) {
+            orderRes.table = tableData;
+          }
+        } catch (tErr) {
+          console.warn('Could not hydrate table info for order:', tErr);
+        }
+      }
+      return orderRes;
     }
   } catch (err) {
     console.warn('RPC get_order_status failed, trying direct select fallback:', err);
@@ -70,7 +106,29 @@ export async function fetchOrderDetailsById(orderId: string): Promise<Order | nu
     return null;
   }
 
-  return directData as Order;
+  const directOrder = directData as Order;
+  if (Array.isArray(directOrder.table)) {
+    directOrder.table = (directOrder.table as any[])[0] || null;
+  }
+
+  if (
+    directOrder &&
+    directOrder.table_id &&
+    (!directOrder.table || directOrder.table.table_number === null || directOrder.table.table_number === undefined)
+  ) {
+    try {
+      const { data: tableData } = await supabase
+        .from('tables')
+        .select('*')
+        .eq('id', directOrder.table_id)
+        .single();
+      if (tableData) {
+        directOrder.table = tableData;
+      }
+    } catch (e) {}
+  }
+
+  return directOrder;
 }
 
 /**

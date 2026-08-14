@@ -66,17 +66,23 @@ export async function fetchAllCustomerFeedbacks(): Promise<CustomerFeedback[]> {
   try {
     const stored: CustomerFeedback[] = JSON.parse(localStorage.getItem('orderezz_customer_feedbacks') || '[]');
     if (stored.length > 0) {
-      const existingIds = new Set(dbFeedbacks.map((f) => f.id));
+      const existingIds = new Set(dbFeedbacks.map((f) => f.id).filter(Boolean));
       for (const item of stored) {
-        if (!existingIds.has(item.id)) {
+        if (item.id && !existingIds.has(item.id)) {
           dbFeedbacks.push(item);
         }
       }
     }
   } catch (e) {}
 
+  // Ensure every item has a unique id if missing
+  const sanitized = dbFeedbacks.map((item, index) => ({
+    ...item,
+    id: item.id || `fb-${item.created_at || 'entry'}-${index}`,
+  }));
+
   // Return sorted descending
-  return dbFeedbacks.sort(
+  return sanitized.sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 }

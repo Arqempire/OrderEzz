@@ -4,11 +4,12 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Order, OrderStatus } from '@/lib/types/database.types';
 import { createClient } from '@/lib/supabase/client';
 import { OrderStatusBadge } from '@/components/ui/badge';
-import { CheckCircle2, Clock, Utensils, Sparkles, CheckCheck, RefreshCw, PlusCircle, Radio, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, Utensils, Sparkles, CheckCheck, RefreshCw, PlusCircle, Radio, XCircle, Table as TableIcon } from 'lucide-react';
 import { fetchOrderDetailsById, cancelCustomerOrder } from '@/lib/queries/orders';
 import { getActiveOrderIdsForTable, removeOrderFromLocalStorage } from '@/lib/utils/order-session';
 import { markOrderCancelledByCustomer } from '@/lib/utils/order-cancellation';
 import { ThankYouFeedbackCard } from '@/components/order/thank-you-feedback-card';
+import { formatTableLabel } from '@/lib/utils/table-helper';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -158,16 +159,23 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
     return <ThankYouFeedbackCard order={order} />;
   }
 
+  const tableLabel = formatTableLabel(order);
+
   return (
     <div className="space-y-6">
       {/* Header status summary card */}
       <div className="glass-panel rounded-3xl p-6 border border-slate-800 text-center relative overflow-hidden">
         <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
         
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-            <Radio size={12} className="animate-pulse text-emerald-400" />
-            <span>Live Auto-Updating</span>
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-extrabold px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-sm">
+              <TableIcon size={14} /> {tableLabel}
+            </span>
+            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+              <Radio size={12} className="animate-pulse text-emerald-400" />
+              <span>Live Auto-Updating</span>
+            </div>
           </div>
 
           <button
@@ -300,9 +308,14 @@ export const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ initialO
 
       {/* Order Summary Items */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold text-slate-200 font-display border-b border-slate-800 pb-3 flex justify-between items-center">
-          <span>Order Items Summary</span>
-          <span className="text-xs text-slate-400 font-mono">#{order.id.slice(0, 6)}</span>
+        <h3 className="text-sm font-bold text-slate-200 font-display border-b border-slate-800 pb-3 flex justify-between items-center flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span>Order Items Summary</span>
+            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] font-extrabold px-2 py-0.5 rounded-lg flex items-center gap-1">
+              <TableIcon size={11} /> {tableLabel}
+            </span>
+          </div>
+          <span className="text-xs text-slate-400 font-mono">Order #{order.id.slice(0, 6)}</span>
         </h3>
 
         <div className="divide-y divide-slate-800/60">

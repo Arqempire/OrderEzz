@@ -6,8 +6,9 @@ import { fetchOrderDetailsById } from '@/lib/queries/orders';
 import { getActiveOrderIdsForTable, removeOrderFromLocalStorage } from '@/lib/utils/order-session';
 import { OrderStatusBadge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
-import { ArrowRight, Clock, ChevronRight } from 'lucide-react';
+import { ArrowRight, Clock, ChevronRight, Table as TableIcon } from 'lucide-react';
 import Link from 'next/link';
+import { formatTableLabel } from '@/lib/utils/table-helper';
 
 interface ActiveOrderBannerProps {
   tableToken: string;
@@ -88,7 +89,7 @@ export const ActiveOrderBanner: React.FC<ActiveOrderBannerProps> = ({
   if (activeOrders.length === 0) return null;
 
   const currentOrder = activeOrders[selectedIndex] || activeOrders[0];
-  const tableNum = currentOrder.table?.table_number;
+  const tableLabel = formatTableLabel(currentOrder);
   const combinedTotal = activeOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
 
   // Stack above sticky cart bar (bottom-24) if cart has items, else bottom-4
@@ -117,7 +118,7 @@ export const ActiveOrderBanner: React.FC<ActiveOrderBannerProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-100 truncate">
-                {tableNum ? `Table ${tableNum}` : 'Active Order'}
+                {tableLabel}
               </span>
               <OrderStatusBadge status={currentOrder.status} className="flex-shrink-0 !py-0.5 text-[10px]" />
             </div>

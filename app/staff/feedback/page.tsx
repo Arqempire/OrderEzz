@@ -194,9 +194,9 @@ export default function StaffFeedbackPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredFeedbacks.map((fb) => (
+            {filteredFeedbacks.map((fb, idx) => (
               <div
-                key={fb.id}
+                key={fb.id || `fb-staff-${idx}`}
                 className="glass-card rounded-2xl p-5 border border-slate-800 space-y-3 relative overflow-hidden"
               >
                 {/* Header row: Table & Stars */}
