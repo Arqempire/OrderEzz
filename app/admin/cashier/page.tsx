@@ -166,7 +166,7 @@ export default function CashierPanelPage() {
 
     for (const order of orders) {
       const hasTakeawayTag = order.order_items?.some((item) => item.notes?.includes('[Takeaway'));
-      const isTakeaway = !order.table_id || order.table?.table_number === 0 || order.table?.table_number === 999 || (order.table?.table_number as unknown) === 'Takeaway' || hasTakeawayTag;
+      const isTakeaway = !order.table_id || order.table?.table_number === 99 || (order.table?.table_number as unknown) === 'Takeaway' || hasTakeawayTag;
       const tableId = isTakeaway ? 'takeaway_counter' : (order.table?.id || order.table_id || 'unknown');
       const tableNumber = isTakeaway ? 'Takeaway' : (order.table?.table_number ?? 'Takeaway');
 
@@ -804,8 +804,7 @@ export default function CashierPanelPage() {
                   const hasTakeawayTag = order.order_items?.some((item) => item.notes?.includes('[Takeaway'));
                   const isTakeaway =
                     !order.table_id ||
-                    order.table?.table_number === 0 ||
-                    order.table?.table_number === 999 ||
+                    order.table?.table_number === 99 ||
                     (order.table?.table_number as unknown) === 'Takeaway' ||
                     hasTakeawayTag;
 

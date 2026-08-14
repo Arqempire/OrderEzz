@@ -25,7 +25,7 @@ export function saveDismissedOrderId(orderId: string) {
 }
 
 /**
- * Gets or creates the dedicated Takeaway Counter Table (table_number: 0 or 999).
+ * Gets or creates the dedicated Takeaway Counter Table (table_number: 99).
  */
 async function getOrCreateTakeawayTableId(): Promise<string | null> {
   const supabase = createClient();
@@ -34,7 +34,7 @@ async function getOrCreateTakeawayTableId(): Promise<string | null> {
     const { data: existing } = await supabase
       .from('tables')
       .select('id')
-      .in('table_number', [0, 999])
+      .eq('table_number', 99)
       .limit(1)
       .maybeSingle();
 
@@ -45,7 +45,7 @@ async function getOrCreateTakeawayTableId(): Promise<string | null> {
     const { data: created, error } = await supabase
       .from('tables')
       .insert({
-        table_number: 999,
+        table_number: 99,
         is_active: true,
       })
       .select('id')
@@ -82,7 +82,7 @@ export async function createTakeawayOrder(
     };
   });
 
-  // Get dedicated Takeaway table ID (table_number: 0) to prevent fallback to active dine-in tables
+  // Get dedicated Takeaway table ID (table_number: 99) to prevent fallback to active dine-in tables
   const takeawayTableId = await getOrCreateTakeawayTableId();
 
   const { data: orderId, error: rpcError } = await supabase.rpc('place_order_with_items', {

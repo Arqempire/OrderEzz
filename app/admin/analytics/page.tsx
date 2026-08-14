@@ -649,8 +649,7 @@ export default function AdminAnalyticsPage() {
                     modalFilteredOrders.map((ord) => {
                       const isTakeaway =
                         !ord.table_id ||
-                        ord.table?.table_number === 0 ||
-                        ord.table?.table_number === 999 ||
+                        ord.table?.table_number === 99 ||
                         (ord.table?.table_number as unknown) === 'Takeaway' ||
                         ord.order_items?.some((i) => i.notes?.includes('[Takeaway]'));
 

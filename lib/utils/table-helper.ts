@@ -40,7 +40,7 @@ export function isTakeawayOrder(order?: Order | null): boolean {
 
   const tableNum = extractTableNumber(order);
 
-  if (tableNum === 0 || tableNum === 999) return true;
+  if (tableNum === 99) return true;
 
   if (!order.table_id && !tableNum) {
     // Only call it takeaway if there's an explicit [Takeaway] note OR no table at all
@@ -63,7 +63,7 @@ export function formatTableLabel(order?: Order | null): string {
   const tableNum = extractTableNumber(order);
 
   if (tableNum !== null) {
-    if (tableNum === 0 || tableNum === 999) return 'Takeaway / Counter';
+    if (tableNum === 99) return 'Takeaway / Counter';
     return `Table ${tableNum}`;
   }
 
