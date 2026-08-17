@@ -16,6 +16,7 @@ import {
   Loader2,
   UtensilsCrossed,
   RotateCcw,
+  Tag,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -54,6 +55,10 @@ export const TakeawayBillingModal: React.FC<TakeawayBillingModalProps> = ({
   const [cart, setCart] = useState<PosCartItem[]>([]);
   const [customerName, setCustomerName] = useState('');
 
+  // Discount state
+  const [discountType, setDiscountType] = useState<'flat' | 'percent'>('percent');
+  const [discountValue, setDiscountValue] = useState<string>('');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittingType, setSubmittingType] = useState<'paid' | 'kitchen' | null>(null);
 
@@ -89,6 +94,18 @@ export const TakeawayBillingModal: React.FC<TakeawayBillingModalProps> = ({
 
   const cartTotal = cart.reduce((sum, c) => sum + c.price * c.quantity, 0);
   const cartCount = cart.reduce((sum, c) => sum + c.quantity, 0);
+
+  const discountAmount = (() => {
+    const val = parseFloat(discountValue);
+    if (isNaN(val) || val <= 0) return 0;
+    if (discountType === 'percent') {
+      const pct = Math.min(val, 100);
+      return Math.round((cartTotal * pct) / 100 * 100) / 100;
+    }
+    return Math.min(val, cartTotal);
+  })();
+
+  const finalTotal = Math.max(0, cartTotal - discountAmount);
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
@@ -136,6 +153,7 @@ export const TakeawayBillingModal: React.FC<TakeawayBillingModalProps> = ({
 
   const handleClearCart = () => {
     setCart([]);
+    setDiscountValue('');
   };
 
   const handleCreateOrder = async (settleImmediately: boolean) => {
@@ -170,16 +188,17 @@ export const TakeawayBillingModal: React.FC<TakeawayBillingModalProps> = ({
 
     toast.success(
       settleImmediately
-        ? `Takeaway Bill (₹${cartTotal.toFixed(2)}) Settled! ✓`
+        ? `Takeaway Bill (₹${finalTotal.toFixed(2)}) Settled! ✓`
         : 'Takeaway Order Sent to Kitchen! 🍳'
     );
 
     const currentCart = [...cart];
     setCart([]);
     setCustomerName('');
+    setDiscountValue('');
     onClose();
 
-    onOrderCreated(orderId, settleImmediately, cartTotal, currentCart);
+    onOrderCreated(orderId, settleImmediately, finalTotal, currentCart);
   };
 
   return (
@@ -459,17 +478,88 @@ export const TakeawayBillingModal: React.FC<TakeawayBillingModalProps> = ({
 
             {/* Total Summary & Settlement Buttons */}
             <div className="pt-3 border-t border-slate-800 space-y-3">
+
+              {/* Discount Input */}
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Tag size={13} className="text-amber-400" />
+                  <span className="text-xs font-bold text-slate-300">Apply Discount</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Toggle: Flat vs Percent */}
+                  <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 flex-shrink-0">
+                    <button
+                      onClick={() => { setDiscountType('percent'); setDiscountValue(''); }}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                        discountType === 'percent'
+                          ? 'bg-amber-500 text-slate-950 shadow'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      %
+                    </button>
+                    <button
+                      onClick={() => { setDiscountType('flat'); setDiscountValue(''); }}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                        discountType === 'flat'
+                          ? 'bg-amber-500 text-slate-950 shadow'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      ₹
+                    </button>
+                  </div>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder={discountType === 'percent' ? 'e.g. 10 (%)' : 'e.g. 50 (₹)'}
+                    value={discountValue}
+                    onChange={(e) => setDiscountValue(e.target.value)}
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors font-mono"
+                  />
+
+                  {discountValue && (
+                    <button
+                      onClick={() => setDiscountValue('')}
+                      className="text-slate-500 hover:text-red-400 p-1 rounded-md transition-colors cursor-pointer flex-shrink-0"
+                      title="Clear discount"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+
+                {discountAmount > 0 && (
+                  <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                    <Tag size={11} />
+                    Discount applied: –₹{discountAmount.toFixed(2)}
+                    {discountType === 'percent' && ` (${parseFloat(discountValue)}%)`}
+                  </p>
+                )}
+              </div>
+
               <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-1.5">
                 <div className="flex justify-between text-xs text-slate-400">
                   <span>Subtotal ({cartCount} items)</span>
                   <span className="font-mono">₹{cartTotal.toFixed(2)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-xs text-emerald-400">
+                    <span className="flex items-center gap-1">
+                      <Tag size={11} /> Discount
+                      {discountType === 'percent' && ` (${parseFloat(discountValue)}%)`}
+                    </span>
+                    <span className="font-mono">–₹{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-sm pt-1.5 border-t border-slate-800">
                   <span className="font-extrabold text-slate-200 font-display">
                     Grand Total
                   </span>
                   <span className="text-xl font-extrabold text-amber-400 font-display">
-                    ₹{cartTotal.toFixed(2)}
+                    ₹{finalTotal.toFixed(2)}
                   </span>
                 </div>
               </div>
