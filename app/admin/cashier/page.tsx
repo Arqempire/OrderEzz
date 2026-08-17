@@ -567,11 +567,10 @@ export default function CashierPanelPage() {
                       return (
                         <div
                           key={order.id}
-                          className={`rounded-2xl p-3.5 border space-y-2 transition-all ${
-                            isCancelled
-                              ? 'bg-red-950/20 border-red-800/40'
-                              : 'bg-slate-900/90 border-slate-800/90'
-                          }`}
+                          className={`rounded-2xl p-3.5 border space-y-2 transition-all ${isCancelled
+                            ? 'bg-red-950/20 border-red-800/40'
+                            : 'bg-slate-900/90 border-slate-800/90'
+                            }`}
                         >
                           {/* Sub-order Header */}
                           <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-800/60">
@@ -662,53 +661,46 @@ export default function CashierPanelPage() {
                     const disc = tableDiscounts[group.tableId] || { type: 'percent' as const, value: '' };
                     const { discountAmount, finalTotal } = getGroupDiscount(group);
                     return (
-                      <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Tag size={15} className="text-amber-400" />
-                          <span className="text-sm font-bold text-slate-200">Apply Discount</span>
+                      <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-3 space-y-2">
+                        <div className="flex items-center gap-1.5">
+                          <Tag size={12} className="text-amber-400" />
+                          <span className="text-[11px] font-bold text-slate-300">Apply Discount</span>
                         </div>
-                        <div className="flex items-center gap-2.5">
-                          {/* % / ₹ toggle */}
-                          <div className="flex bg-slate-900 border border-slate-700 rounded-xl p-1 flex-shrink-0">
+                        <div className="flex items-center gap-2">
+                          <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 flex-shrink-0">
                             <button
                               onClick={() => setGroupDiscount(group.tableId, { type: 'percent', value: '' })}
-                              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                disc.type === 'percent' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-                              }`}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${disc.type === 'percent' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+                                }`}
                             >%</button>
                             <button
                               onClick={() => setGroupDiscount(group.tableId, { type: 'flat', value: '' })}
-                              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                disc.type === 'flat' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-                              }`}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${disc.type === 'flat' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+                                }`}
                             >₹</button>
                           </div>
                           <input
                             type="number"
                             min="0"
                             step="any"
-                            placeholder={disc.type === 'percent' ? 'Enter % discount' : 'Enter ₹ amount'}
+                            placeholder={disc.type === 'percent' ? 'e.g. 10 (%)' : 'e.g. 50 (₹)'}
                             value={disc.value}
                             onChange={(e) => setGroupDiscount(group.tableId, { value: e.target.value })}
-                            className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors font-mono"
+                            className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors font-mono"
                           />
                           {disc.value && (
                             <button
                               onClick={() => clearGroupDiscount(group.tableId)}
-                              className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+                              className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors cursor-pointer flex-shrink-0"
                               title="Clear discount"
-                            ><X size={15} /></button>
+                            ><X size={12} /></button>
                           )}
                         </div>
                         {discountAmount > 0 && (
-                          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3.5 py-2 flex items-center justify-between">
-                            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                              <Tag size={13} /> Discount
-                            </span>
-                            <span className="text-sm font-extrabold text-emerald-400 font-mono">
-                              –₹{discountAmount.toFixed(2)} · Final: ₹{finalTotal.toFixed(2)}
-                            </span>
-                          </div>
+                          <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                            <Tag size={10} />
+                            –₹{discountAmount.toFixed(2)} off · Final: ₹{finalTotal.toFixed(2)}
+                          </p>
                         )}
                       </div>
                     );
@@ -743,8 +735,8 @@ export default function CashierPanelPage() {
                           {isGroupProcessing
                             ? 'Processing…'
                             : discountAmount > 0
-                            ? `Settle ₹${finalTotal.toFixed(2)} (–₹${discountAmount.toFixed(2)})`
-                            : `Settle Bill (₹${group.groupTotal.toFixed(2)})`}
+                              ? `Settle ₹${finalTotal.toFixed(2)} (–₹${discountAmount.toFixed(2)})`
+                              : `Settle Bill (₹${group.groupTotal.toFixed(2)})`}
                         </button>
                       </div>
                     );
@@ -901,31 +893,28 @@ export default function CashierPanelPage() {
             <div className="flex items-center gap-2 pb-1">
               <button
                 onClick={() => setHistoryFilter('all')}
-                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                  historyFilter === 'all'
-                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                }`}
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${historyFilter === 'all'
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
               >
                 All Orders ({paidOrdersHistory.length})
               </button>
               <button
                 onClick={() => setHistoryFilter('paid')}
-                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                  historyFilter === 'paid'
-                    ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                }`}
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${historyFilter === 'paid'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
               >
                 Paid ({paidOrdersHistory.filter((o) => o.status === 'paid').length})
               </button>
               <button
                 onClick={() => setHistoryFilter('cancelled')}
-                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                  historyFilter === 'cancelled'
-                    ? 'bg-red-500 text-slate-950 shadow-md shadow-red-500/20'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                }`}
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${historyFilter === 'cancelled'
+                  ? 'bg-red-500 text-slate-950 shadow-md shadow-red-500/20'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
               >
                 Cancelled ({paidOrdersHistory.filter((o) => o.status === 'cancelled').length})
               </button>
@@ -956,22 +945,20 @@ export default function CashierPanelPage() {
                   return (
                     <div
                       key={order.id}
-                      className={`rounded-2xl p-4 border space-y-3 transition-all ${
-                        isCancelled
-                          ? 'bg-red-950/20 border-red-800/40'
-                          : 'bg-slate-950/80 border-slate-800 hover:border-emerald-500/30'
-                      }`}
+                      className={`rounded-2xl p-4 border space-y-3 transition-all ${isCancelled
+                        ? 'bg-red-950/20 border-red-800/40'
+                        : 'bg-slate-950/80 border-slate-800 hover:border-emerald-500/30'
+                        }`}
                     >
                       <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`font-extrabold text-xs px-2.5 py-0.5 rounded-lg border font-display ${
-                              isCancelled
-                                ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                                : isTakeaway
+                            className={`font-extrabold text-xs px-2.5 py-0.5 rounded-lg border font-display ${isCancelled
+                              ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                              : isTakeaway
                                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            }`}
+                              }`}
                           >
                             {isTakeaway ? 'Takeaway' : `Table ${order.table?.table_number ?? '?'}`}
                           </span>
