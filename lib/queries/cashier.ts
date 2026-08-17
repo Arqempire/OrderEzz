@@ -158,12 +158,17 @@ export async function dismissCancelledOrder(orderId: string): Promise<boolean> {
 
 /**
  * Marks an order as paid (settled at counter).
+ * Optionally pass a discountedTotal to update the stored total with the after-discount amount.
  */
-export async function markOrderAsPaid(orderId: string): Promise<boolean> {
+export async function markOrderAsPaid(orderId: string, discountedTotal?: number): Promise<boolean> {
   const supabase = createClient();
+  const update: Record<string, unknown> = { status: 'paid' };
+  if (discountedTotal !== undefined) {
+    update.total = discountedTotal;
+  }
   const { error } = await supabase
     .from('orders')
-    .update({ status: 'paid' })
+    .update(update)
     .eq('id', orderId);
 
   if (error) {

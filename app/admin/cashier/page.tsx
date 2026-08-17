@@ -29,6 +29,7 @@ import {
   ShoppingBag,
   User,
   Phone,
+  Tag,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -40,6 +41,13 @@ interface TableOrderGroup {
   tableNumber: number | string;
   orders: Order[];
   groupTotal: number;
+  /** Discount amount already deducted (used when printing receipt after settlement) */
+  discountAmount?: number;
+}
+
+interface TableDiscount {
+  type: 'flat' | 'percent';
+  value: string;
 }
 
 export default function CashierPanelPage() {
@@ -58,6 +66,7 @@ export default function CashierPanelPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
   const [historyFilter, setHistoryFilter] = useState<'all' | 'paid' | 'cancelled'>('all');
   const [isTakeawayModalOpen, setIsTakeawayModalOpen] = useState<boolean>(false);
+  const [tableDiscounts, setTableDiscounts] = useState<Record<string, TableDiscount>>({});
 
   const handleTakeawayOrderCreated = (
     orderId: string,
@@ -109,6 +118,39 @@ export default function CashierPanelPage() {
     if (historyFilter === 'cancelled') return paidOrdersHistory.filter((o) => o.status === 'cancelled');
     return paidOrdersHistory;
   }, [paidOrdersHistory, historyFilter]);
+
+  /** Compute the discount amount and final total for a given table group */
+  const getGroupDiscount = useCallback(
+    (group: TableOrderGroup): { discountAmount: number; finalTotal: number } => {
+      const disc = tableDiscounts[group.tableId];
+      if (!disc || !disc.value) return { discountAmount: 0, finalTotal: group.groupTotal };
+      const val = parseFloat(disc.value);
+      if (isNaN(val) || val <= 0) return { discountAmount: 0, finalTotal: group.groupTotal };
+      let discountAmount = 0;
+      if (disc.type === 'percent') {
+        discountAmount = Math.round((group.groupTotal * Math.min(val, 100)) / 100 * 100) / 100;
+      } else {
+        discountAmount = Math.min(val, group.groupTotal);
+      }
+      return { discountAmount, finalTotal: Math.max(0, group.groupTotal - discountAmount) };
+    },
+    [tableDiscounts]
+  );
+
+  const setGroupDiscount = (tableId: string, patch: Partial<TableDiscount>) => {
+    setTableDiscounts((prev) => {
+      const existing: TableDiscount = prev[tableId] ?? { type: 'percent', value: '' };
+      return { ...prev, [tableId]: { ...existing, ...patch } };
+    });
+  };
+
+  const clearGroupDiscount = (tableId: string) => {
+    setTableDiscounts((prev) => {
+      const next = { ...prev };
+      delete next[tableId];
+      return next;
+    });
+  };
 
   const handleOpenHistory = async () => {
     setIsHistoryOpen(true);
@@ -199,21 +241,24 @@ export default function CashierPanelPage() {
     await dismissCancelledOrder(orderId);
   };
 
-  const handleMarkPaid = async (order: Order) => {
+  const handleMarkPaid = async (order: Order, groupDiscount?: { discountAmount: number; finalTotal: number }) => {
     if (processingOrderIds[order.id]) return;
 
     setProcessingOrderIds((prev) => ({ ...prev, [order.id]: true }));
 
+    const discountedTotal = groupDiscount ? groupDiscount.finalTotal : undefined;
+    const displayTotal = discountedTotal ?? Number(order.total);
+
     // Optimistic UI update
     setOrders((prev) => prev.filter((o) => o.id !== order.id));
     setSummary((prev) => ({
-      totalCollected: prev.totalCollected + Number(order.total),
+      totalCollected: prev.totalCollected + displayTotal,
       paidOrderCount: prev.paidOrderCount + 1,
     }));
 
     toast.success(`Order #${order.id.slice(0, 6)} marked as paid! ✓`);
 
-    const success = await markOrderAsPaid(order.id);
+    const success = await markOrderAsPaid(order.id, discountedTotal);
 
     if (!success) {
       toast.error('Failed to mark order as paid');
@@ -238,6 +283,8 @@ export default function CashierPanelPage() {
     const anyProcessing = allOrderIds.some((id) => processingOrderIds[id]);
     if (anyProcessing) return;
 
+    const { discountAmount, finalTotal } = getGroupDiscount(group);
+
     setProcessingOrderIds((prev) => {
       const next = { ...prev };
       allOrderIds.forEach((id) => {
@@ -249,15 +296,34 @@ export default function CashierPanelPage() {
     // Optimistic UI update
     setOrders((prev) => prev.filter((o) => !allOrderIds.includes(o.id)));
     setSummary((prev) => ({
-      totalCollected: prev.totalCollected + group.groupTotal,
+      totalCollected: prev.totalCollected + finalTotal,
       paidOrderCount: prev.paidOrderCount + activeOrders.length,
     }));
 
-    toast.success(`Table ${group.tableNumber} bill settled (₹${group.groupTotal.toFixed(2)})! ✓`);
+    const toastMsg = discountAmount > 0
+      ? `Table ${group.tableNumber} settled ₹${finalTotal.toFixed(2)} (saved ₹${discountAmount.toFixed(2)})! ✓`
+      : `Table ${group.tableNumber} bill settled (₹${finalTotal.toFixed(2)})! ✓`;
+    toast.success(toastMsg);
 
-    // Mark active orders as paid in DB
+    // Open receipt immediately with discount info
+    setReceiptToPrint({ ...group, groupTotal: finalTotal, discountAmount });
+
+    clearGroupDiscount(group.tableId);
+
+    // Mark active orders as paid in DB, distributing the discount proportionally
     if (activeOrderIds.length > 0) {
-      await Promise.all(activeOrderIds.map((id) => markOrderAsPaid(id)));
+      if (discountAmount > 0 && group.groupTotal > 0) {
+        // Distribute discount proportionally across active orders
+        await Promise.all(
+          activeOrders.map((o) => {
+            const proportion = Number(o.total) / group.groupTotal;
+            const discountedOrderTotal = Math.max(0, Number(o.total) - Math.round(discountAmount * proportion * 100) / 100);
+            return markOrderAsPaid(o.id, discountedOrderTotal);
+          })
+        );
+      } else {
+        await Promise.all(activeOrderIds.map((id) => markOrderAsPaid(id)));
+      }
     }
 
     // Mark cancelled orders as dismissed in DB so Realtime re-fetches ignore them
@@ -591,31 +657,93 @@ export default function CashierPanelPage() {
                     })}
                   </div>
 
+                  {/* Per-table Discount */}
+                  {(() => {
+                    const disc = tableDiscounts[group.tableId] || { type: 'percent' as const, value: '' };
+                    const { discountAmount, finalTotal } = getGroupDiscount(group);
+                    return (
+                      <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-3 space-y-2">
+                        <div className="flex items-center gap-1.5">
+                          <Tag size={12} className="text-amber-400" />
+                          <span className="text-[11px] font-bold text-slate-300">Apply Discount</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 flex-shrink-0">
+                            <button
+                              onClick={() => setGroupDiscount(group.tableId, { type: 'percent', value: '' })}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                disc.type === 'percent' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+                              }`}
+                            >%</button>
+                            <button
+                              onClick={() => setGroupDiscount(group.tableId, { type: 'flat', value: '' })}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                disc.type === 'flat' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+                              }`}
+                            >₹</button>
+                          </div>
+                          <input
+                            type="number"
+                            min="0"
+                            step="any"
+                            placeholder={disc.type === 'percent' ? 'e.g. 10 (%)' : 'e.g. 50 (₹)'}
+                            value={disc.value}
+                            onChange={(e) => setGroupDiscount(group.tableId, { value: e.target.value })}
+                            className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors font-mono"
+                          />
+                          {disc.value && (
+                            <button
+                              onClick={() => clearGroupDiscount(group.tableId)}
+                              className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors cursor-pointer flex-shrink-0"
+                              title="Clear discount"
+                            ><X size={12} /></button>
+                          )}
+                        </div>
+                        {discountAmount > 0 && (
+                          <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                            <Tag size={10} />
+                            –₹{discountAmount.toFixed(2)} off · Final: ₹{finalTotal.toFixed(2)}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   {/* Table Settlement Action */}
-                  <div className="pt-3 border-t border-slate-800 flex items-center gap-2">
-                    <button
-                      onClick={() => setReceiptToPrint(group)}
-                      className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-xs px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0"
-                      title="Print Customer Bill Receipt"
-                    >
-                      <Printer size={15} />
-                      Print Bill
-                    </button>
-                    <button
-                      onClick={() => handleMarkGroupPaid(group)}
-                      disabled={isGroupProcessing}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
-                    >
-                      {isGroupProcessing ? (
-                        <Loader2 size={15} className="animate-spin" />
-                      ) : (
-                        <CheckCircle2 size={15} />
-                      )}
-                      {isGroupProcessing
-                        ? 'Processing…'
-                        : `Settle Bill (₹${group.groupTotal.toFixed(2)})`}
-                    </button>
-                  </div>
+                  {(() => {
+                    const { discountAmount, finalTotal } = getGroupDiscount(group);
+                    return (
+                      <div className="pt-3 border-t border-slate-800 flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const { discountAmount: da, finalTotal: ft } = getGroupDiscount(group);
+                            setReceiptToPrint({ ...group, groupTotal: ft, discountAmount: da });
+                          }}
+                          className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-xs px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0"
+                          title="Print Customer Bill Receipt"
+                        >
+                          <Printer size={15} />
+                          Print Bill
+                        </button>
+                        <button
+                          onClick={() => handleMarkGroupPaid(group)}
+                          disabled={isGroupProcessing}
+                          className="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          {isGroupProcessing ? (
+                            <Loader2 size={15} className="animate-spin" />
+                          ) : (
+                            <CheckCircle2 size={15} />
+                          )}
+                          {isGroupProcessing
+                            ? 'Processing…'
+                            : discountAmount > 0
+                            ? `Settle ₹${finalTotal.toFixed(2)} (–₹${discountAmount.toFixed(2)})`
+                            : `Settle Bill (₹${group.groupTotal.toFixed(2)})`}
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -695,6 +823,18 @@ export default function CashierPanelPage() {
 
               {/* Totals Breakdown */}
               <div className="pt-3 border-t border-dashed border-slate-400 space-y-1.5 text-slate-900">
+                {receiptToPrint.discountAmount !== undefined && receiptToPrint.discountAmount > 0 && (
+                  <>
+                    <div className="flex justify-between text-[11px] text-slate-700">
+                      <span>Subtotal</span>
+                      <span>₹{(receiptToPrint.groupTotal + receiptToPrint.discountAmount).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] text-slate-700">
+                      <span>Discount</span>
+                      <span>–₹{receiptToPrint.discountAmount.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between font-bold text-sm pt-1 border-t border-slate-900">
                   <span>AMOUNT PAYABLE:</span>
                   <span>₹{receiptToPrint.groupTotal.toFixed(2)}</span>
