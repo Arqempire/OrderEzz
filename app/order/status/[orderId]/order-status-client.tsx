@@ -7,7 +7,7 @@ import { Order } from '@/lib/types/database.types';
 import { OrderStatusTracker } from '@/components/order/order-status-tracker';
 import { ActiveOrderBanner } from '@/components/order/active-order-banner';
 import { TableRequestButtons } from '@/components/order/table-request-buttons';
-import { Loader2, AlertCircle, UtensilsCrossed, PlusCircle, Table as TableIcon } from 'lucide-react';
+import { Loader2, AlertCircle, UtensilsCrossed, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { formatTableLabel } from '@/lib/utils/table-helper';
 
@@ -59,7 +59,6 @@ function OrderStatusContent() {
   }
 
   const tableQrToken = tokenFromUrl || order.table?.qr_token;
-  const tableLabel = formatTableLabel(order);
 
   return (
     <main className="menu-container px-4 py-6 pb-20">
@@ -70,14 +69,9 @@ function OrderStatusContent() {
             <UtensilsCrossed size={20} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold font-display text-slate-100 tracking-tight">
-                Order<span className="text-amber-400">Ezz</span>
-              </h1>
-              <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-extrabold px-2.5 py-0.5 rounded-xl flex items-center gap-1">
-                <TableIcon size={12} /> {tableLabel}
-              </span>
-            </div>
+            <h1 className="text-xl font-extrabold font-display text-slate-100 tracking-tight">
+              Order<span className="text-amber-400">Ezz</span>
+            </h1>
             <p className="text-[11px] text-slate-400 font-medium">
               Live Realtime Order Status Tracking
             </p>
