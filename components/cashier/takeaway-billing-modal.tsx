@@ -480,19 +480,19 @@ export const TakeawayBillingModal: React.FC<TakeawayBillingModalProps> = ({
             <div className="pt-3 border-t border-slate-800 space-y-3">
 
               {/* Discount Input */}
-              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <Tag size={13} className="text-amber-400" />
-                  <span className="text-xs font-bold text-slate-300">Apply Discount</span>
-                </div>
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center gap-2">
+                  <Tag size={15} className="text-amber-400" />
+                  <span className="text-sm font-bold text-slate-200">Apply Discount</span>
+                </div>
+                <div className="flex items-center gap-2.5">
                   {/* Toggle: Flat vs Percent */}
-                  <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 flex-shrink-0">
+                  <div className="flex bg-slate-900 border border-slate-700 rounded-xl p-1 flex-shrink-0">
                     <button
                       onClick={() => { setDiscountType('percent'); setDiscountValue(''); }}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         discountType === 'percent'
-                          ? 'bg-amber-500 text-slate-950 shadow'
+                          ? 'bg-amber-500 text-slate-950 shadow-md'
                           : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
@@ -500,9 +500,9 @@ export const TakeawayBillingModal: React.FC<TakeawayBillingModalProps> = ({
                     </button>
                     <button
                       onClick={() => { setDiscountType('flat'); setDiscountValue(''); }}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         discountType === 'flat'
-                          ? 'bg-amber-500 text-slate-950 shadow'
+                          ? 'bg-amber-500 text-slate-950 shadow-md'
                           : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
@@ -514,29 +514,32 @@ export const TakeawayBillingModal: React.FC<TakeawayBillingModalProps> = ({
                     type="number"
                     min="0"
                     step="any"
-                    placeholder={discountType === 'percent' ? 'e.g. 10 (%)' : 'e.g. 50 (₹)'}
+                    placeholder={discountType === 'percent' ? 'Enter % discount' : 'Enter ₹ amount'}
                     value={discountValue}
                     onChange={(e) => setDiscountValue(e.target.value)}
-                    className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors font-mono"
+                    className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors font-mono"
                   />
 
                   {discountValue && (
                     <button
                       onClick={() => setDiscountValue('')}
-                      className="text-slate-500 hover:text-red-400 p-1 rounded-md transition-colors cursor-pointer flex-shrink-0"
+                      className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg transition-colors cursor-pointer flex-shrink-0"
                       title="Clear discount"
                     >
-                      <X size={13} />
+                      <X size={15} />
                     </button>
                   )}
                 </div>
 
                 {discountAmount > 0 && (
-                  <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-                    <Tag size={11} />
-                    Discount applied: –₹{discountAmount.toFixed(2)}
-                    {discountType === 'percent' && ` (${parseFloat(discountValue)}%)`}
-                  </p>
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3.5 py-2 flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                      <Tag size={13} /> Discount{discountType === 'percent' && ` (${parseFloat(discountValue)}%)`}
+                    </span>
+                    <span className="text-sm font-extrabold text-emerald-400 font-mono">
+                      –₹{discountAmount.toFixed(2)}
+                    </span>
+                  </div>
                 )}
               </div>
 
